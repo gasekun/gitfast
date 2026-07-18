@@ -1,0 +1,322 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:gitFast.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
+        x:Class="gitFast.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="gitFast" Classes="Main" Background="{StaticResource bg}"
+        Loaded="Control_OnLoaded">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+
+    <Grid RowDefinitions="44, *">
+        <Border Classes="Title">
+            <StackPanel Orientation="Horizontal" Spacing="7">
+                <PathIcon Data="{StaticResource Git}"
+                          Foreground="{StaticResource blue-500}"
+                          Width="16"
+                          Height="16" />
+                <TextBlock Classes="Brand">gitFast</TextBlock>
+                <Separator Height="20" Width="1"
+                           Background="{StaticResource border}" />
+
+                <Border Classes="PanelRound">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Data="{StaticResource FolderOutline}"
+                                  Foreground="{StaticResource text-muted}"
+                                  Width="13"
+                                  Height="13" />
+                        <TextBlock FontWeight="Medium">gitFast-cli</TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="PanelRound" IsVisible="False">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <Border Width="7" Height="7"
+                                Background="{StaticResource blue-400}"
+                                CornerRadius="50" />
+                        <TextBlock FontSize="12.5" Text="main" />
+                        <TextBlock Foreground="{StaticResource text-faint}" Text="▾" />
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="PanelRound" Width="340" Cursor="Arrow">
+                    <Grid ColumnDefinitions="Auto,7,*">
+                        <PathIcon Data="{StaticResource Magnify}"
+                                  Foreground="{StaticResource text-faint}"
+                                  Width="13" Height="13" />
+                        <TextBox Grid.Column="2" Classes="SearchTextBox" TextChanged="SearchBox_OnTextChanged" />
+                    </Grid>
+                </Border>
+                <Button Click="Button_OnClick">Rerender</Button>
+            </StackPanel>
+        </Border>
+        <Grid Grid.Row="1" ColumnDefinitions="268, *" RowDefinitions="1.3*, *">
+            <Border Grid.RowSpan="2" BorderBrush="{StaticResource border}"
+                    BorderThickness="0,0,1,0"
+                    Background="{StaticResource panel}"
+                    Padding="10,14">
+                <StackPanel Classes="SideSection">
+                    <TextBlock Text="BRANCHES" Classes="SideLabel" />
+                    <Border Classes="SideItem Selected">
+                        <StackPanel>
+                            <Border Width="7" Height="7"
+                                    Background="{StaticResource blue-400}"
+                                    CornerRadius="50" />
+                            <TextBlock VerticalAlignment="Center">main</TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="SideItem">
+                        <StackPanel>
+                            <Border Width="7" Height="7"
+                                    Background="{StaticResource violet-400}"
+                                    CornerRadius="50" />
+                            <TextBlock VerticalAlignment="Center">feature/diff-view</TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="SideItem">
+                        <StackPanel>
+                            <Border Width="7" Height="7"
+                                    Background="{StaticResource red-400}"
+                                    CornerRadius="50" />
+                            <TextBlock VerticalAlignment="Center">feature/cli-flags</TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Border Classes="SideItem">
+                        <StackPanel>
+                            <Border Width="7" Height="7"
+                                    Background="{StaticResource amber-400}"
+                                    CornerRadius="50" />
+                            <TextBlock VerticalAlignment="Center">fix/graph-render</TextBlock>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+            <Border Grid.Row="0" Grid.Column="1"
+                    BorderBrush="{StaticResource border}"
+                    BorderThickness="0,0,0,1">
+                <Grid RowDefinitions="Auto, *">
+                    <Border VerticalAlignment="Center"
+                            Padding="14,10"
+                            BorderBrush="{StaticResource border}"
+                            BorderThickness="0,0,0,1">
+                        <StackPanel Orientation="Horizontal"
+                                    Spacing="8"
+                                    TextElement.Foreground="{StaticResource text-muted}"
+                                    TextElement.FontSize="12">
+                            <TextBlock>main</TextBlock>
+                            <TextBlock Foreground="{StaticResource text-faint}">· <Run Text="{Binding Commits.Count}"/> commits</TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <PathIcon Grid.Row="1" x:Name="LoaderIcon"
+                              Data="{StaticResource Autorenew}"
+                              Width="32"
+                              Height="32"
+                              VerticalAlignment="Center"
+                              HorizontalAlignment="Center"
+                              Foreground="{StaticResource text}">
+                        <PathIcon.Styles>
+                            <Style Selector="PathIcon">
+                                <Style.Animations>
+                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                        <KeyFrame Cue="0%">
+                                            <Setter Property="RotateTransform.Angle" Value="0"/>
+                                        </KeyFrame>
+                                        <KeyFrame Cue="100%">
+                                            <Setter Property="RotateTransform.Angle" Value="360"/>
+                                        </KeyFrame>
+                                    </Animation>
+                                </Style.Animations>
+                            </Style>
+                        </PathIcon.Styles>
+                    </PathIcon>
+                    <ScrollViewer Grid.Row="1">
+                        <Grid>
+                            <Canvas ZIndex="2" x:Name="GitGraph">
+                                <!-- <Line StartPoint="28,26" EndPoint="28,78" -->
+                                <!--       Stroke="{StaticResource blue-400}" -->
+                                <!--       StrokeThickness="2" -->
+                                <!--       Opacity="0.55" /> -->
+                                <!-- <Line StartPoint="28,78" EndPoint="28,130" -->
+                                <!--       Stroke="{StaticResource blue-400}" -->
+                                <!--       StrokeThickness="2" -->
+                                <!--       Opacity="0.55" /> -->
+                                <!-- <Ellipse Width="10" Height="10" Canvas.Left="23" Canvas.Top="21" -->
+                                <!--          Fill="{StaticResource blue-400}" /> -->
+                                <!-- <Ellipse Width="16" Height="16" Canvas.Left="20" Canvas.Top="18" -->
+                                <!--          Stroke="{StaticResource blue-400}" -->
+                                <!--          StrokeThickness="1" -->
+                                <!--          Opacity="0.3" /> -->
+                                <!-- -->
+                                <!-- <Ellipse Width="10" Height="10" Canvas.Left="23" Canvas.Top="73" -->
+                                <!--          Fill="{StaticResource blue-400}" /> -->
+                                <!-- <Ellipse Width="16" Height="16" Canvas.Left="20" Canvas.Top="70.5" -->
+                                <!--          Stroke="{StaticResource blue-400}" -->
+                                <!--          StrokeThickness="1" -->
+                                <!--          Opacity="0.3" /> -->
+                                <!-- -->
+                                <!-- <Ellipse Width="10" Height="10" Canvas.Left="23" Canvas.Top="125" -->
+                                <!--          Fill="{StaticResource blue-400}" /> -->
+                                <!-- <Ellipse Width="16" Height="16" Canvas.Left="20" Canvas.Top="122" -->
+                                <!--          Stroke="{StaticResource blue-400}" -->
+                                <!--          StrokeThickness="1" -->
+                                <!--          Opacity="0.3" /> -->
+                            </Canvas>
+                            <ItemsControl ItemsSource="{Binding Commits}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Classes="CommitRow"
+                                                Classes.Selected="{Binding IsSelected}"
+                                                PointerPressed="CommitRow_OnPointerPressed">
+                                            <Grid ColumnDefinitions="56, *, Auto">
+                                                <Border />
+                                                <StackPanel Grid.Column="1"
+                                                            VerticalAlignment="Center">
+                                                    <TextBlock Classes="CommitMsg" Text="{Binding Message}" />
+                                                    <StackPanel Classes="CommitMeta">
+                                                        <TextBlock Text="{Binding Id}" Classes="Mono" />
+                                                        <TextBlock Text="{Binding Author}" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2" Classes="CommitDate" Text="{Binding Date}" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+            <Grid Grid.Row="1" Grid.Column="1"
+                  RowDefinitions="Auto, *"
+                  Background="{StaticResource panel}">
+                <Border Classes="BottomHead">
+                    <Grid>
+                        <StackPanel>
+                            <Border Classes="Hash">
+                                <TextBlock Text="{Binding SelectedCommit.Id, TargetNullValue='Not selected'}"
+                                           Classes="Mono" />
+                            </Border>
+                            <TextBlock Text="{Binding SelectedCommit.Message}"
+                                       Classes="Msg" />
+
+                            <TextBlock Text="{Binding SelectedCommit.Author}"
+                                       Classes="Author" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding SelectedCommit.Date}"
+                                   Classes="Date" />
+                    </Grid>
+                </Border>
+                <Grid Grid.Row="1" ColumnDefinitions="250, *">
+                    <Border BorderBrush="{StaticResource border}"
+                            BorderThickness="0,0,1,0"
+                            Padding="8">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding SelectedCommit.Files}">
+                                <ItemsControl.ItemsPanel>
+									<ItemsPanelTemplate>
+										<VirtualizingStackPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Classes="FileRow"
+                                                Classes.Selected="{Binding IsSelected}"
+                                                PointerPressed="FileRow_OnPointerPressed">
+                                            <Grid ColumnDefinitions="Auto, 8, *, 8, Auto"
+                                                  TextElement.Foreground="{StaticResource text-muted}">
+                                                <Border Classes="StatusChip A"
+                                                        Classes.A="{Binding IsCreated}"
+                                                        Classes.M="{Binding IsModified}"
+                                                        Classes.R="{Binding IsRemoved}">
+                                                    <TextBlock Text="{Binding TextStatus}" Classes="Status Mono" />
+                                                </Border>
+                                                <TextBlock Grid.Column="2" Text="{Binding Path}"
+                                                           Classes="Mono"
+                                                           Classes.SelectedFileRow="{Binding IsSelected}"
+                                                           TextElement.FontSize="12.5"
+                                                           TextWrapping="NoWrap"
+                                                           TextTrimming="WordEllipsis" />
+                                                <StackPanel Grid.Column="4"
+                                                            Orientation="Horizontal"
+                                                            Spacing="5"
+                                                            TextElement.FontSize="10.5"
+                                                            TextElement.Foreground="{StaticResource text-faint}">
+                                                    <TextBlock Classes="Plus Mono"
+                                                               Text="{Binding CountAdd, StringFormat='+0'}" />
+                                                    <TextBlock Classes="Minus Mono"
+                                                               Text="{Binding CountRemove, StringFormat='-0'}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+                    <Grid Grid.Column="1" RowDefinitions="Auto, *">
+                        <Border Padding="14,8" Background="{StaticResource panel-raised}"
+                                TextElement.FontSize="12"
+                                TextElement.Foreground="{StaticResource text-muted}"
+                                BorderThickness="0,0,0,1"
+                                BorderBrush="{StaticResource border}">
+                            <Grid>
+                                <TextBlock Classes="Mono" Text="{Binding SelectedFileCommit.Path}" />
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <TextBlock>
+                                        +<Run Text="{Binding SelectedFileCommit.CountAdd}" />
+                                        -<Run Text="{Binding SelectedFileCommit.CountRemove}" />
+                                    </TextBlock>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding SelectedFileCommit.Lines}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="34, *"
+                                              Classes.Add="{Binding IsAdd}"
+                                              Classes.Remove="{Binding IsRemove}"
+                                              Classes.Hunk="{Binding IsHunk}"
+                                              Classes.DefaultType="{Binding IsDefault}"
+                                              TextElement.FontFamily="JetBrains Mono, monospace">
+                                            <TextBlock Text="{Binding LinePos}"
+                                                       TextAlignment="Right"
+                                                       Padding="0,0,10,0"
+                                                       Foreground="{StaticResource slate-600}"
+                                                       Height="20.4" />
+                                            <SelectableTextBlock Grid.Column="1" 
+                                                                 Text="{Binding Line}" 
+                                                                 Height="20.4"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+        <!-- <NativeWebView Grid.Row="0" Grid.RowSpan="2"  -->
+        <!--                Source="https://docs.avaloniaui.net/controls/web/nativewebview"/> -->
+        
+        
+    </Grid>
+
+</Window>

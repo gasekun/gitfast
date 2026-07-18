@@ -1,0 +1,282 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style Selector="Window.Main">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontFamily" Value="Inter" />
+        <Setter Property="Foreground" Value="{StaticResource text}" />
+    </Style>
+
+    <Style Selector="Border.Title">
+        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="BorderBrush" Value="{StaticResource border}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Background" Value="{StaticResource panel}" />
+    </Style>
+
+    <Style Selector="Border.PanelRound">
+        <Setter Property="Padding" Value="10,5" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="BorderBrush" Value="{StaticResource border}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{StaticResource panel-raised}" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style Selector="TextBlock.Brand">
+        <Setter Property="Foreground" Value="{StaticResource text}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBox.SearchTextBox">
+        <Setter Property="Watermark" Value="Search commits" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="CaretBrush" Value="{StaticResource text}" />
+        <Setter Property="Foreground" Value="{StaticResource text}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="12.5" />
+    </Style>
+
+    <Style Selector="StackPanel.SideSection">
+        <Setter Property="Margin" Value="0,0,0,16" />
+    </Style>
+
+    <Style Selector="TextBlock.SideLabel">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LetterSpacing" Value="0.44" />
+        <Setter Property="Foreground" Value="{StaticResource text-faint}" />
+        <Setter Property="Padding" Value="6,0,6,6" />
+    </Style>
+
+    <Style Selector="Border.SideItem">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Padding" Value="6" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="TextElement.Foreground" Value="{StaticResource text-muted}" />
+    </Style>
+
+    <Style Selector="Border.SideItem > StackPanel">
+        <Setter Property="Spacing" Value="8" />
+        <Setter Property="Orientation" Value="Horizontal" />
+    </Style>
+
+    <Style Selector="Border.SideItem:pointerover">
+        <Setter Property="Background" Value="{StaticResource panel-raised}" />
+        <Setter Property="TextElement.Foreground" Value="{StaticResource text}" />
+    </Style>
+
+    <Style Selector="Border.SideItem.Selected">
+        <Setter Property="Background" Value="{StaticResource blue-950}" />
+        <Setter Property="TextElement.Foreground" Value="{StaticResource blue-400}" />
+    </Style>
+
+    <Style Selector="Border.CommitRow">
+        <Setter Property="Padding" Value="60,0,14,0" />
+        <Setter Property="Background" Value="{StaticResource panel}" />
+        <Setter Property="Height" Value="52" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="BorderBrush" Value="{StaticResource border}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+
+    <Style Selector="Border.CommitRow:pointerover">
+        <Setter Property="Background" Value="{StaticResource panel-raised}" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style Selector="Border.CommitRow.Selected">
+        <Setter Property="Background" Value="{StaticResource blue-950}" />
+    </Style>
+
+    <Style Selector="TextBlock.CommitMsg">
+        <!-- <Setter Property="FontSize" Value="13"/> -->
+        <Setter Property="Foreground" Value="{StaticResource text}" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <Style Selector="Border.CommitRow.Selected TextBlock.CommitMsg">
+        <Setter Property="Foreground" Value="{StaticResource blue-400}" />
+    </Style>
+
+    <Style Selector="StackPanel.CommitMeta">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Spacing" Value="6" />
+        <Setter Property="Orientation" Value="Horizontal" />
+        <Setter Property="Margin" Value="0,3,0,0" />
+        <Setter Property="TextElement.Foreground" Value="{StaticResource text-faint}" />
+        <Setter Property="TextElement.FontSize" Value="11.5" />
+    </Style>
+
+    <Style Selector="StackPanel.CommitMeta > TextBlock:nth-child(2n+1)">
+        <!-- <Setter Property="LineHeight" Value="9"/> -->
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="StackPanel.CommitMeta > TextBlock:nth-child(2n+2)">
+        <Setter Property="LineHeight" Value="13" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.CommitDate">
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{StaticResource text-faint}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.Mono">
+        <Setter Property="FontFamily" Value="JetBrains Mono, ui-monospace, monospace" />
+    </Style>
+
+    <Style Selector="Border.BottomHead">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Padding" Value="14,10" />
+        <Setter Property="BorderBrush" Value="{StaticResource border}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+
+    <Style Selector="Border.BottomHead StackPanel">
+        <Setter Property="Spacing" Value="10" />
+        <Setter Property="Orientation" Value="Horizontal" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+
+    <Style Selector="Border.BottomHead Border.Hash">
+        <Setter Property="Background" Value="{StaticResource panel-raised}" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="6,1" />
+    </Style>
+
+    <Style Selector="Border.BottomHead Border.Hash TextBlock">
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="Foreground" Value="{StaticResource slate-400}" />
+    </Style>
+
+    <Style Selector="Border.BottomHead TextBlock.Msg">
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="TextTrimming" Value="WordEllipsis" />
+    </Style>
+
+    <Style Selector="Border.BottomHead TextBlock.Author">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{StaticResource text-faint}" />
+    </Style>
+
+    <Style Selector="Border.BottomHead TextBlock.Date">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{StaticResource text-faint}" />
+        <Setter Property="TextAlignment" Value="Right" />
+    </Style>
+
+    <Style Selector="Border.StatusChip">
+        <Setter Property="Width" Value="16" />
+        <Setter Property="Height" Value="16" />
+        <Setter Property="CornerRadius" Value="4" />
+
+        <Style Selector="^Border.A">
+            <Setter Property="Background" Value="{StaticResource emerald-950}" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource emerald-400}" />
+        </Style>
+
+        <Style Selector="^Border.M">
+            <Setter Property="Background" Value="{StaticResource amber-950}" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource amber-400}" />
+        </Style>
+
+        <Style Selector="^Border.R">
+            <Setter Property="Background" Value="{StaticResource red-950}" />
+            <Setter Property="TextElement.Foreground" Value="{StaticResource red-400}" />
+        </Style>
+    </Style>
+
+    <Style Selector="Border.StatusChip TextBlock.Status">
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.Plus">
+        <Setter Property="Foreground" Value="{StaticResource emerald-400}" />
+    </Style>
+
+    <Style Selector="TextBlock.Minus">
+        <Setter Property="Foreground" Value="{StaticResource red-400}" />
+    </Style>
+    
+    <Style Selector="Border.FileRow">
+        <Setter Property="Padding" Value="8,6" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+
+        <Style Selector="^:pointerover">
+            <Setter Property="Background" Value="{StaticResource panel-raised}" />
+        </Style>
+    </Style>
+    
+    <Style Selector="Border.FileRow.Selected">
+        <Setter Property="Background" Value="{StaticResource panel-raised}" />
+    </Style>
+
+    <Style Selector="TextBlock.SelectedFileRow">
+        <Setter Property="Foreground" Value="{StaticResource text}" />
+    </Style>
+    
+    <Style Selector="Grid.Add">
+        <Setter Property="Background" Value="#1710b981"/>
+    </Style>
+    
+    <Style Selector="Grid.Add > SelectableTextBlock">
+        <Setter Property="Foreground" Value="{StaticResource emerald-400}"/>
+    </Style>
+
+    <Style Selector="Grid.Remove">
+        <Setter Property="Background" Value="#17ef4444"/>
+    </Style>
+    
+    <Style Selector="Grid.Remove > SelectableTextBlock">
+        <Setter Property="Foreground" Value="{StaticResource red-400}"/>
+    </Style>
+    
+    <Style Selector="Grid.Hunk > SelectableTextBlock">
+        <Setter Property="Foreground" Value="{StaticResource violet-400}"/>
+    </Style>
+    
+    <Style Selector="Grid.Hunk > TextBlock">
+        <Setter Property="IsVisible" Value="False"/>
+    </Style>
+    
+    <Style Selector="Grid.DefaultType > SelectableTextBlock">
+        <Setter Property="Foreground" Value="{StaticResource text-muted}"/>
+    </Style>
+
+    <Style Selector="Thumb">
+        <Setter Property="Background" Value="{StaticResource slate-700}" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Border CornerRadius="{TemplateBinding CornerRadius}" 
+                            Background="{TemplateBinding Background}">
+                        <ContentPresenter/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</Styles>

@@ -1,0 +1,102 @@
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <PathGeometry x:Key="Git">M2.6,10.59L8.38,4.8L10.07,6.5C9.83,7.35 10.22,8.28 11,8.73V14.27C10.4,14.61 10,15.26 10,16A2,2 0 0,0 12,18A2,2 0 0,0 14,16C14,15.26 13.6,14.61 13,14.27V9.41L15.07,11.5C15,11.65 15,11.82 15,12A2,2 0 0,0 17,14A2,2 0 0,0 19,12A2,2 0 0,0 17,10C16.82,10 16.65,10 16.5,10.07L13.93,7.5C14.19,6.57 13.71,5.55 12.78,5.16C12.35,5 11.9,4.96 11.5,5.07L9.8,3.38L10.59,2.6C11.37,1.81 12.63,1.81 13.41,2.6L21.4,10.59C22.19,11.37 22.19,12.63 21.4,13.41L13.41,21.4C12.63,22.19 11.37,22.19 10.59,21.4L2.6,13.41C1.81,12.63 1.81,11.37 2.6,10.59Z</PathGeometry>
+    <PathGeometry x:Key="FolderOutline">M20,18H4V8H20M20,6H12L10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6Z</PathGeometry>
+    <PathGeometry x:Key="Magnify">M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z</PathGeometry>
+    <PathGeometry x:Key="Autorenew">M12,6V9L16,5L12,1V4A8,8 0 0,0 4,12C4,13.57 4.46,15.03 5.24,16.26L6.7,14.8C6.25,13.97 6,13 6,12A6,6 0 0,1 12,6M18.76,7.74L17.3,9.2C17.74,10.04 18,11 18,12A6,6 0 0,1 12,18V15L8,19L12,23V20A8,8 0 0,0 20,12C20,10.43 19.54,8.97 18.76,7.74Z</PathGeometry>
+    
+    <SolidColorBrush x:Key="slate-950" Color="#020617" />
+    <SolidColorBrush x:Key="bg" Color="#020617" />
+    <SolidColorBrush x:Key="slate-900" Color="#0f172a" />
+    <SolidColorBrush x:Key="panel" Color="#0f172a" />
+    <SolidColorBrush x:Key="slate-850" Color="#131c2e" />
+    <SolidColorBrush x:Key="panel-raised" Color="#131c2e" />
+    <SolidColorBrush x:Key="slate-800" Color="#1e293b" />
+    <SolidColorBrush x:Key="border" Color="#1e293b" />
+    <SolidColorBrush x:Key="slate-700" Color="#334155" />
+    <SolidColorBrush x:Key="border-strong" Color="#334155" />
+    <SolidColorBrush x:Key="slate-600" Color="#475569" />
+    <SolidColorBrush x:Key="slate-500" Color="#64748b" />
+    <SolidColorBrush x:Key="text-faint" Color="#64748b" />
+    <SolidColorBrush x:Key="slate-400" Color="#94a3b8" />
+    <SolidColorBrush x:Key="text-muted" Color="#94a3b8" />
+    <SolidColorBrush x:Key="slate-300" Color="#cbd5e1" />
+    <SolidColorBrush x:Key="slate-200" Color="#e2e8f0" />
+    <SolidColorBrush x:Key="slate-100" Color="#f1f5f9" />
+    <SolidColorBrush x:Key="text" Color="#f1f5f9" />
+
+    <SolidColorBrush x:Key="blue-950" Color="#172554" />
+    <SolidColorBrush x:Key="blue-900" Color="#1e3a8a" />
+    <SolidColorBrush x:Key="blue-500" Color="#3b82f6" />
+    <SolidColorBrush x:Key="blue-400" Color="#60a5fa" />
+
+    <SolidColorBrush x:Key="emerald-950" Color="#022c22" />
+    <SolidColorBrush x:Key="emerald-500" Color="#10b981" />
+    <SolidColorBrush x:Key="emerald-400" Color="#34d399" />
+
+    <SolidColorBrush x:Key="red-950" Color="#450a0a" />
+    <SolidColorBrush x:Key="red-500" Color="#ef4444" />
+    <SolidColorBrush x:Key="red-400" Color="#f87171" />
+
+    <SolidColorBrush x:Key="amber-950" Color="#461901" />
+    <SolidColorBrush x:Key="amber-500" Color="#f59e0b" />
+    <SolidColorBrush x:Key="amber-400" Color="#fbbf24" />
+
+    <SolidColorBrush x:Key="violet-500" Color="#8b5cf6" />
+    <SolidColorBrush x:Key="violet-400" Color="#a78bfa" />
+    
+    <SolidColorBrush x:Key="indigo-400" Color="#818cf8" />
+    
+    <SolidColorBrush x:Key="purple-400" Color="#c084fc" />
+    
+    <SolidColorBrush x:Key="lime-400" Color="#a3e635" />
+    
+    <SolidColorBrush x:Key="green-400" Color="#4ade80" />
+    
+    <SolidColorBrush x:Key="sky-400" Color="#38bdf8" />
+    
+    <SolidColorBrush x:Key="cyan-400" Color="#22d3ee" />
+
+    <ControlTheme x:Key="{x:Type ScrollBar}" TargetType="ScrollBar">
+        <Setter Property="MinWidth" Value="10"/>
+        <Setter Property="MinHeight" Value="10"/>
+        <Setter Property="Background" Value="Transparent"/>
+    
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid Name="Root">
+                    <!-- Track holds the thumb and handles large step clicks -->
+                    <Track Name="PART_Track"
+                           Minimum="{TemplateBinding Minimum}"
+                           Maximum="{TemplateBinding Maximum}"
+                           Value="{TemplateBinding Value, Mode=TwoWay}"
+                           ViewportSize="{TemplateBinding ViewportSize}"
+                           Orientation="{TemplateBinding Orientation}"
+                           IsDirectionReversed="True">
+            
+                        <!-- Custom Styled Thumb -->
+                        <Track.Thumb>
+                            <Thumb>
+                                <Thumb.Template>
+                                    <ControlTemplate>
+                                        <Border Background="{StaticResource slate-700}" 
+                                                CornerRadius="4" 
+                                                Margin="2"
+                                                Transitions="{TemplateBinding Transitions}"/>
+                                    </ControlTemplate>
+                                </Thumb.Template>
+                            </Thumb>
+                        </Track.Thumb>
+            
+                    </Track>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+
+        <!-- Visual state when hovering over the overall scroll area -->
+        <Style Selector="^:pointerover /template/ Border">
+            <Setter Property="Background" Value="{StaticResource slate-500}"/>
+        </Style>
+    </ControlTheme>
+
+</ResourceDictionary>

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "gitFast": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\winamorinw\\apache\\Apache24\\htdocs\\sed_test\""
+    }
+  }
+}
