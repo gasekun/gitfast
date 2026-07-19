@@ -17,6 +17,7 @@ public partial record FileCommit(string Path, StatusFile Status)
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
     } = [];
+
     public string TextStatus => Status switch
     {
         StatusFile.Add => "A",
@@ -70,14 +71,8 @@ public partial record FileCommit(string Path, StatusFile Status)
         {
             var fileLine = new FileLineCommit(line, 0);
 
-            if (line.StartsWith("+"))
-            {
-                fileLine.Type = LineType.Add;
-            }
-            if (line.StartsWith("-"))
-            {
-                fileLine.Type = LineType.Remove;
-            }
+            if (line.StartsWith("+")) fileLine.Type = LineType.Add;
+            if (line.StartsWith("-")) fileLine.Type = LineType.Remove;
 
             fileLine.LinePos = currentLinePos++;
 
@@ -91,11 +86,13 @@ public partial record FileCommit(string Path, StatusFile Status)
 
             list.Add(fileLine);
         }
+
         return list;
     }
 
     [GeneratedRegex(@"\+(\d+)")]
     private static partial Regex RegexPlus();
+
     [GeneratedRegex(@"\-(\d+)")]
     private static partial Regex RegexMinus();
 }

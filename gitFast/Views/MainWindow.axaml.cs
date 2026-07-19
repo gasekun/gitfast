@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
@@ -8,45 +9,41 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using gitFast.Models;
+using gitFast.Services;
 using gitFast.ViewModels;
 using FileCommit = gitFast.Models.FileCommit;
-using System.Threading.Tasks;
 
 namespace gitFast.Views;
 
 public partial class MainWindow : Window
 {
-    private List<SolidColorBrush> Brushes;
-    private int currentOffsetBrush = 0;
+    private const double offsetY = 52;
+    private const double offsetX = 24;
+    private readonly List<SolidColorBrush> Brushes;
+
     public MainWindow()
     {
-        Application.Current!.TryGetResource("blue-400", out var brush1);
-        Application.Current!.TryGetResource("emerald-400", out var brush2);
-        Application.Current!.TryGetResource("red-400", out var brush3);
-        Application.Current!.TryGetResource("amber-400", out var brush4);
-        Application.Current!.TryGetResource("violet-400", out var brush5);
-        Application.Current!.TryGetResource("indigo-400", out var brush6);
-        Application.Current!.TryGetResource("purple-400", out var brush7);
-        Application.Current!.TryGetResource("lime-400", out var brush8);
-        Application.Current!.TryGetResource("green-400", out var brush9);
-        Application.Current!.TryGetResource("sky-400", out var brush10);
-        Application.Current!.TryGetResource("cyan-400", out var brush11);
+        Application.Current!.TryGetResource("red-400", out var red);
+        Application.Current!.TryGetResource("amber-400", out var amber);
+        Application.Current!.TryGetResource("lime-400", out var lime);
+        Application.Current!.TryGetResource("emerald-400", out var emerald);
+        Application.Current!.TryGetResource("cyan-400", out var cyan);
+        Application.Current!.TryGetResource("blue-400", out var blue);
+        Application.Current!.TryGetResource("violet-400", out var violet);
+        Application.Current!.TryGetResource("fuchsia-400", out var fuchsia);
 
         Brushes =
         [
-            (brush2 as SolidColorBrush)!,
-            (brush7 as SolidColorBrush)!,
-            (brush1 as SolidColorBrush)!,
-            (brush5 as SolidColorBrush)!,
-            (brush10 as SolidColorBrush)!,
-            (brush9 as SolidColorBrush)!,
-            (brush3 as SolidColorBrush)!,
-            (brush4 as SolidColorBrush)!,
-            (brush6 as SolidColorBrush)!,
-            (brush8 as SolidColorBrush)!,
-            (brush11 as SolidColorBrush)!
+            (red as SolidColorBrush)!,
+            (blue as SolidColorBrush)!,
+            (amber as SolidColorBrush)!,
+            (fuchsia as SolidColorBrush)!,
+            (emerald as SolidColorBrush)!,
+            (cyan as SolidColorBrush)!,
+            (violet as SolidColorBrush)!,
+            (lime as SolidColorBrush)!
         ];
-        
+
         InitializeComponent();
     }
 
@@ -76,110 +73,143 @@ public partial class MainWindow : Window
         }
     }
 
-    private Task GenerateGraphAsync(MainWindowViewModel model)
+    private async Task GenerateGraphAsync(MainWindowViewModel model)
     {
-        const double offsetY = 52;
-        const double offsetX = 24;
+        await Task.Yield();
+
         var sizePoint = new Point(12, 12);
         var parents = new List<GitGraph>();
-        var arrayOffsetCommits = new int[model.Commits.Count];
-        var currentPoint = new Point(offsetX, 21);
+        var linesColors = new Dictionary<int, SolidColorBrush>();
+        var arrayCommitOffset = new int[model.Commits.Count];
         var currentOffset = 1;
+
+        GitGraph.IsVisible = false;
 
         GitGraph.Children.Clear();
 
         for (var i = 0; i < model.Commits.Count; i++)
         {
             var modelCommit = model.Commits[i];
-            currentOffsetBrush++;
 
             var first = parents.FindIndex(item => item.Id == modelCommit.Id);
 
             if (first != -1)
             {
                 currentOffset = first + 1;
+                arrayCommitOffset[i] = currentOffset;
 
-                currentPoint = new Point(offsetX * currentOffset, currentPoint.Y);
+                var currentPoint2 = new Point(arrayCommitOffset[i] * offsetX, 21 + i * offsetY);
 
-                var allPoints = parents
-                    .Where(item => item.Id == modelCommit.Id)
-                    .SelectMany(item => item.Points)
-                    .ToList();
+                var paths = parents.Where(item => item.Id == modelCommit.Id).Select(item => item.Path);
 
-                foreach (var point in allPoints)
-                    AddConnection(point, currentPoint, sizePoint);
+                foreach (var path in paths) AddConnection(path, currentPoint2, sizePoint);
 
                 parents.RemoveAll(item => item.Id == modelCommit.Id);
             }
 
-            arrayOffsetCommits[i] = currentOffset;
-            
+            if (i == 0)
+                arrayCommitOffset[i] = currentOffset;
+
+            var currentPoint = new Point(arrayCommitOffset[i] * offsetX, 21 + i * offsetY);
             AddCommitNode(modelCommit, currentPoint, sizePoint);
 
             if (modelCommit.ParentId.Length > 0)
-            {
                 for (var index = 0; index < modelCommit.ParentId.Length; index++)
                 {
                     var parentId = modelCommit.ParentId[index];
 
                     if (index == 0)
-                        parents.Insert(currentOffset - 1, new GitGraph(parentId, [currentPoint]));
+                        parents.Insert(currentOffset - 1,
+                            new GitGraph(parentId,
+                                new PathFigure
+                                {
+                                    StartPoint = currentPoint + sizePoint / 2, IsClosed = false
+                                }));
                     else
-                        parents.Add(new GitGraph(parentId, [currentPoint]));
+                        parents.Add(new GitGraph(parentId,
+                            new PathFigure
+                            {
+                                StartPoint = currentPoint + sizePoint / 2, IsClosed = false
+                            }));
                 }
-            }
 
-            currentPoint += new Point(0, offsetY);
+            for (var j = 0; j < parents.Count; j++)
+            {
+                if (currentOffset == j + 1) continue;
+
+                var point = new Point((j + 1) * offsetX, 21 + i * offsetY);
+
+                parents[j].Path.Segments!.Add(new LineSegment
+                {
+                    Point = point + sizePoint / 2
+                });
+            }
         }
 
-        return Task.CompletedTask;
+        GitGraph.IsVisible = true;
     }
 
-    private void AddConnection(Point start, Point end, Point pointSize)
+    private void AddConnection(PathFigure path, Point currentPoint2, Point sizePoint)
     {
-        //(int)(start.X / pointSize.X)
-        var brush = Brushes[currentOffsetBrush % Brushes.Count];
-        var centerOffset = new Point(pointSize.X / 2, pointSize.Y / 2);
-        var size = new Size(pointSize.X, pointSize.Y);
-        var startCenter = start + centerOffset;
-        var endCenter = end + centerOffset;
-
-        if (Math.Abs(start.X - end.X) <= 0.01)
+        if (path.Segments!.Count > 0 && path.Segments!.Last() is LineSegment line &&
+            Math.Abs(line.Point.X - currentPoint2.X - sizePoint.X / 2) < 0.001f)
         {
-            GitGraph.Children.Add(new Line
+            path.Segments.Remove(line);
+
+            path.Segments!.Add(new QuadraticBezierSegment
             {
-                StartPoint = startCenter,
-                EndPoint = endCenter,
-                Stroke = brush,
-                StrokeThickness = 2
+                Point1 = line.Point,
+                Point2 = currentPoint2 + sizePoint / 2
             });
-            return;
         }
-
-        var pathFigure = new PathFigure { StartPoint = startCenter, IsClosed = false };
-        if (start.X > end.X)
+        else if (path.Segments!.Count > 0 && path.Segments!.Last() is LineSegment line2 &&
+                 Math.Abs(line2.Point.X - currentPoint2.X - sizePoint.X / 2) > 0.001f)
         {
-            pathFigure.Segments!.Add(new LineSegment { Point = new Point(start.X, end.Y) + new Point(pointSize.X / 2, 0) });
-            pathFigure.Segments!.Add(new ArcSegment
+            path.Segments!.Add(new QuadraticBezierSegment
             {
-                Point = new Point(start.X, end.Y) + centerOffset - new Point(pointSize.X / 2, 0),
-                Size = size
+                Point1 = new Point(line2.Point.X, currentPoint2.Y + sizePoint.Y / 2),
+                Point2 = new Point(line2.Point.X, currentPoint2.Y + sizePoint.Y / 2) + new Point(-offsetX, 0)
+            });
+
+            path.Segments.Add(new LineSegment
+            {
+                Point = currentPoint2 + sizePoint / 2
             });
         }
         else
         {
-            pathFigure.Segments!.Add(new LineSegment { Point = new Point(end.X, start.Y) + new Point(0, pointSize.Y / 2) });
-            pathFigure.Segments!.Add(new ArcSegment
-            {
-                Point = new Point(end.X, start.Y) + centerOffset + new Point(0, pointSize.Y / 2),
-                Size = size
-            });
+            if (Math.Abs(path.StartPoint.X - currentPoint2.X - sizePoint.X / 2) < 0.001f)
+                path.Segments!.Add(new LineSegment
+                {
+                    Point = currentPoint2 + sizePoint / 2
+                });
+            else
+                path.Segments!.Add(new QuadraticBezierSegment
+                {
+                    Point1 = new Point(path.StartPoint.X, currentPoint2.Y) + sizePoint / 2,
+                    Point2 = currentPoint2 + sizePoint / 2
+                });
         }
 
-        pathFigure.Segments!.Add(new LineSegment { Point = endCenter });
-        
+        if (path.Segments.Count > 2)
+            if (path.Segments[0] is LineSegment line1 && path.Segments[1] is LineSegment line2)
+            {
+                path.Segments.Remove(line1);
+                path.Segments.Remove(line2);
+
+                path.Segments.Insert(0, new QuadraticBezierSegment
+                {
+                    Point1 = line1.Point,
+                    Point2 = line2.Point
+                });
+            }
+
+
+        var brush = Brushes[(int)(path.StartPoint.X / offsetX) % Brushes.Count];
+
         var geometry = new PathGeometry();
-        geometry.Figures!.Add(pathFigure);
+        geometry.Figures!.Add(path);
+
         GitGraph.Children.Add(new Path
         {
             Stroke = brush,
@@ -192,7 +222,8 @@ public partial class MainWindow : Window
     private void AddCommitNode(CommitInfo commit, Point point, Point pointSize)
     {
         //(int)(point.X / pointSize.X)
-        var brush = Brushes[currentOffsetBrush % Brushes.Count];
+        var brush = Brushes[(int)(point.X / offsetX) % Brushes.Count];
+
         if (commit.Message.Contains("Merge"))
         {
             var mergeNode = new Ellipse
@@ -223,19 +254,38 @@ public partial class MainWindow : Window
 
     private async void SearchBox_OnTextChanged(object? sender, TextChangedEventArgs e)
     {
-        if (DataContext is MainWindowViewModel model && sender is TextBox box)
-        {
-            await model.SearchCommits(box.Text!);
-        }
+        if (DataContext is MainWindowViewModel model && sender is TextBox box) await model.SearchCommits(box.Text!);
     }
 
     private async void Button_OnClick(object? sender, RoutedEventArgs e)
     {
+        if (DataContext is MainWindowViewModel model) await GenerateGraphAsync(model);
+    }
+
+    private async void FetchButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        await GitService.GitFetch();
+
         if (DataContext is MainWindowViewModel model)
         {
+            LoaderIcon.IsVisible = true;
+            await model.Init();
+            LoaderIcon.IsVisible = false;
+            await GenerateGraphAsync(model);
+        }
+    }
+
+    private async void Branch_Pressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (sender is Border { DataContext: BranchInfo branch } && DataContext is MainWindowViewModel model)
+        {
+            LoaderIcon.IsVisible = true;
+            model.SelectBranch(branch.Name);
+            await model.Init();
+            LoaderIcon.IsVisible = false;
             await GenerateGraphAsync(model);
         }
     }
 }
 
-internal sealed record GitGraph(string Id, List<Point> Points);
+internal sealed record GitGraph(string Id, PathFigure Path);

@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Avalonia.Controls;
 using gitFast.Models;
 using gitFast.Services;
 using ReactiveUI;
@@ -15,24 +12,19 @@ namespace gitFast.ViewModels;
 public class MainWindowViewModel : ViewModelBase
 {
     private List<CommitInfo> commits = [];
+
+    public ObservableCollection<BranchInfo> Branches
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    } = [];
+
     public ObservableCollection<CommitInfo> Commits
     {
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
     } = [];
 
-    public async Task Init()
-    {
-        await Task.Run(() =>
-        {
-            commits = GitService.GetCommits();
-
-            Commits = new ObservableCollection<CommitInfo>(commits);
-
-            if (Commits.Count > 0)
-                SelectCommit(Commits[0]);
-        });
-    }
     public CommitInfo? SelectedCommit
     {
         get;
@@ -43,6 +35,19 @@ public class MainWindowViewModel : ViewModelBase
     {
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
+    }
+
+    public async Task Init()
+    {
+        await Task.Run(() =>
+        {
+            Branches = new ObservableCollection<BranchInfo>(GitService.GetBranches());
+            commits = GitService.GetCommits();
+            Commits = new ObservableCollection<CommitInfo>(commits);
+
+            if (Commits.Count > 0)
+                SelectCommit(Commits[0]);
+        });
     }
 
     public async void SelectCommit(CommitInfo commit)
@@ -59,19 +64,12 @@ public class MainWindowViewModel : ViewModelBase
             commit.Files = await GitService.GetFilesCommit(commit.Id);
 
         if (commit.Files.Count > 0)
-        {
             await Task.Run(() =>
             {
                 SelectFileCommit(commit.Files[0]);
 
-                foreach (var commitFile in commit.Files)
-                {
-                    commitFile.LoadCount(commit.Id);
-                }
+                foreach (var commitFile in commit.Files) commitFile.LoadCount(commit.Id);
             });
-
-        }
-
     }
 
     public void SelectFileCommit(FileCommit fileCommit)
@@ -99,5 +97,10 @@ public class MainWindowViewModel : ViewModelBase
         {
             return Task.FromException(exception);
         }
+    }
+
+    public void SelectBranch(string branch)
+    {
+        GitService.SelectBranch(branch);
     }
 }

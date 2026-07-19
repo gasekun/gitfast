@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using gitFast.Models;
@@ -67,6 +68,7 @@ public static class GitService
 
     public static List<CommitInfo> GetCommits()
     {
+        //"--all", 
         var output = RunGit("log", "--topo-order", "--pretty=%H%x09%s%x09%aN%x09%at%x09%P");
         if (output.Length == 0)
             return [];
@@ -91,6 +93,27 @@ public static class GitService
         }
 
         return list;
+    }
+
+    public static async Task GitFetch()
+    {
+        await Task.Run(() =>
+        {
+            RunGit("fetch", "--all");
+            RunGit("pull", "--all");
+        });
+    }
+
+    public static List<BranchInfo> GetBranches()
+    {
+        var output = RunGit("branch", "--all");
+        
+        return output.Select(item => new BranchInfo(item.Replace("*", "").Trim(), item.Contains('*'))).ToList();
+    }
+
+    public static void SelectBranch(string branch)
+    {
+        RunGit("switch",  branch);
     }
 
     private static string[] RunGit(params string[] arguments)
@@ -136,16 +159,14 @@ public static class GitService
 
         return output
             .TrimEnd('\r', '\n')
-            .Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+            .Split(["\r\n", "\n"], StringSplitOptions.None);
     }
 
     private static int FindFirstDiffLine(string[] lines)
     {
         for (var i = 0; i < lines.Length; i++)
-        {
             if (lines[i].StartsWith("@@", StringComparison.Ordinal))
                 return i;
-        }
 
         return lines.Length;
     }

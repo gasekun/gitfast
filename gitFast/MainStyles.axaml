@@ -215,7 +215,7 @@
     <Style Selector="TextBlock.Minus">
         <Setter Property="Foreground" Value="{StaticResource red-400}" />
     </Style>
-    
+
     <Style Selector="Border.FileRow">
         <Setter Property="Padding" Value="8,6" />
         <Setter Property="CornerRadius" Value="6" />
@@ -227,7 +227,7 @@
             <Setter Property="Background" Value="{StaticResource panel-raised}" />
         </Style>
     </Style>
-    
+
     <Style Selector="Border.FileRow.Selected">
         <Setter Property="Background" Value="{StaticResource panel-raised}" />
     </Style>
@@ -235,33 +235,33 @@
     <Style Selector="TextBlock.SelectedFileRow">
         <Setter Property="Foreground" Value="{StaticResource text}" />
     </Style>
-    
+
     <Style Selector="Grid.Add">
-        <Setter Property="Background" Value="#1710b981"/>
+        <Setter Property="Background" Value="#1710b981" />
     </Style>
-    
+
     <Style Selector="Grid.Add > SelectableTextBlock">
-        <Setter Property="Foreground" Value="{StaticResource emerald-400}"/>
+        <Setter Property="Foreground" Value="{StaticResource emerald-400}" />
     </Style>
 
     <Style Selector="Grid.Remove">
-        <Setter Property="Background" Value="#17ef4444"/>
+        <Setter Property="Background" Value="#17ef4444" />
     </Style>
-    
+
     <Style Selector="Grid.Remove > SelectableTextBlock">
-        <Setter Property="Foreground" Value="{StaticResource red-400}"/>
+        <Setter Property="Foreground" Value="{StaticResource red-400}" />
     </Style>
-    
+
     <Style Selector="Grid.Hunk > SelectableTextBlock">
-        <Setter Property="Foreground" Value="{StaticResource violet-400}"/>
+        <Setter Property="Foreground" Value="{StaticResource violet-400}" />
     </Style>
-    
+
     <Style Selector="Grid.Hunk > TextBlock">
-        <Setter Property="IsVisible" Value="False"/>
+        <Setter Property="IsVisible" Value="False" />
     </Style>
-    
+
     <Style Selector="Grid.DefaultType > SelectableTextBlock">
-        <Setter Property="Foreground" Value="{StaticResource text-muted}"/>
+        <Setter Property="Foreground" Value="{StaticResource text-muted}" />
     </Style>
 
     <Style Selector="Thumb">
@@ -270,13 +270,41 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <Border CornerRadius="{TemplateBinding CornerRadius}" 
+                    <Border CornerRadius="{TemplateBinding CornerRadius}"
                             Background="{TemplateBinding Background}">
-                        <ContentPresenter/>
+                        <ContentPresenter />
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <Style Selector="Button.Btn">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Background" Value="{StaticResource panel-raised}" />
+        <Setter Property="Padding" Value="12,7" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{StaticResource text}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="BorderBrush" Value="{StaticResource border-strong}" />
+        <Setter Property="BorderThickness" Value="1" />
+        
+        <Style Selector="^:pointerover">
+            <Setter Property="Background" Value="{StaticResource slate-800}" />
+        </Style>
+    </Style>
+
+    <Style Selector="Button.Btn StackPanel">
+        <Setter Property="Spacing" Value="6" />
+        <Setter Property="Orientation" Value="Horizontal" />
+    </Style>
+    
+    <Style Selector="Button.Btn PathIcon">
+        <Setter Property="Width" Value="14" />
+        <Setter Property="Height" Value="14" />
+        <Setter Property="Foreground" Value="{StaticResource text}" />
     </Style>
 
 </Styles>

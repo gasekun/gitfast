@@ -53,7 +53,16 @@
                         <TextBox Grid.Column="2" Classes="SearchTextBox" TextChanged="SearchBox_OnTextChanged" />
                     </Grid>
                 </Border>
-                <Button Click="Button_OnClick">Rerender</Button>
+                <Button Classes="Btn">
+                    <PathIcon Data="{StaticResource Reload}" />
+                </Button>
+                <Button Click="Button_OnClick" Classes="Btn">Rerender</Button>
+                <Button Click="FetchButton_OnClick" Classes="Btn">
+                    <StackPanel>
+                        <PathIcon Data="{StaticResource Reload}" />
+                        <TextBlock>Fetch</TextBlock>
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Border>
         <Grid Grid.Row="1" ColumnDefinitions="268, *" RowDefinitions="1.3*, *">
@@ -63,38 +72,25 @@
                     Padding="10,14">
                 <StackPanel Classes="SideSection">
                     <TextBlock Text="BRANCHES" Classes="SideLabel" />
-                    <Border Classes="SideItem Selected">
-                        <StackPanel>
-                            <Border Width="7" Height="7"
-                                    Background="{StaticResource blue-400}"
-                                    CornerRadius="50" />
-                            <TextBlock VerticalAlignment="Center">main</TextBlock>
-                        </StackPanel>
-                    </Border>
-                    <Border Classes="SideItem">
-                        <StackPanel>
-                            <Border Width="7" Height="7"
-                                    Background="{StaticResource violet-400}"
-                                    CornerRadius="50" />
-                            <TextBlock VerticalAlignment="Center">feature/diff-view</TextBlock>
-                        </StackPanel>
-                    </Border>
-                    <Border Classes="SideItem">
-                        <StackPanel>
-                            <Border Width="7" Height="7"
-                                    Background="{StaticResource red-400}"
-                                    CornerRadius="50" />
-                            <TextBlock VerticalAlignment="Center">feature/cli-flags</TextBlock>
-                        </StackPanel>
-                    </Border>
-                    <Border Classes="SideItem">
-                        <StackPanel>
-                            <Border Width="7" Height="7"
-                                    Background="{StaticResource amber-400}"
-                                    CornerRadius="50" />
-                            <TextBlock VerticalAlignment="Center">fix/graph-render</TextBlock>
-                        </StackPanel>
-                    </Border>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Height="320">
+                        <ItemsControl ItemsSource="{Binding Branches}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Classes="SideItem"
+                                            Classes.Selected="{Binding IsCurrentBranch}"
+                                            PointerPressed="Branch_Pressed">
+                                        <StackPanel>
+                                            <Border Width="7" Height="7"
+                                                    Background="{StaticResource blue-400}"
+                                                    CornerRadius="50" />
+                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+           
                 </StackPanel>
             </Border>
             <Border Grid.Row="0" Grid.Column="1"
@@ -110,7 +106,10 @@
                                     TextElement.Foreground="{StaticResource text-muted}"
                                     TextElement.FontSize="12">
                             <TextBlock>main</TextBlock>
-                            <TextBlock Foreground="{StaticResource text-faint}">· <Run Text="{Binding Commits.Count}"/> commits</TextBlock>
+                            <TextBlock Foreground="{StaticResource text-faint}">
+                                ·
+                                <Run Text="{Binding Commits.Count}" /> commits
+                            </TextBlock>
                         </StackPanel>
                     </Border>
                     <PathIcon Grid.Row="1" x:Name="LoaderIcon"
@@ -125,10 +124,10 @@
                                 <Style.Animations>
                                     <Animation Duration="0:0:1" IterationCount="INFINITE">
                                         <KeyFrame Cue="0%">
-                                            <Setter Property="RotateTransform.Angle" Value="0"/>
+                                            <Setter Property="RotateTransform.Angle" Value="0" />
                                         </KeyFrame>
                                         <KeyFrame Cue="100%">
-                                            <Setter Property="RotateTransform.Angle" Value="360"/>
+                                            <Setter Property="RotateTransform.Angle" Value="360" />
                                         </KeyFrame>
                                     </Animation>
                                 </Style.Animations>
@@ -137,36 +136,7 @@
                     </PathIcon>
                     <ScrollViewer Grid.Row="1">
                         <Grid>
-                            <Canvas ZIndex="2" x:Name="GitGraph">
-                                <!-- <Line StartPoint="28,26" EndPoint="28,78" -->
-                                <!--       Stroke="{StaticResource blue-400}" -->
-                                <!--       StrokeThickness="2" -->
-                                <!--       Opacity="0.55" /> -->
-                                <!-- <Line StartPoint="28,78" EndPoint="28,130" -->
-                                <!--       Stroke="{StaticResource blue-400}" -->
-                                <!--       StrokeThickness="2" -->
-                                <!--       Opacity="0.55" /> -->
-                                <!-- <Ellipse Width="10" Height="10" Canvas.Left="23" Canvas.Top="21" -->
-                                <!--          Fill="{StaticResource blue-400}" /> -->
-                                <!-- <Ellipse Width="16" Height="16" Canvas.Left="20" Canvas.Top="18" -->
-                                <!--          Stroke="{StaticResource blue-400}" -->
-                                <!--          StrokeThickness="1" -->
-                                <!--          Opacity="0.3" /> -->
-                                <!-- -->
-                                <!-- <Ellipse Width="10" Height="10" Canvas.Left="23" Canvas.Top="73" -->
-                                <!--          Fill="{StaticResource blue-400}" /> -->
-                                <!-- <Ellipse Width="16" Height="16" Canvas.Left="20" Canvas.Top="70.5" -->
-                                <!--          Stroke="{StaticResource blue-400}" -->
-                                <!--          StrokeThickness="1" -->
-                                <!--          Opacity="0.3" /> -->
-                                <!-- -->
-                                <!-- <Ellipse Width="10" Height="10" Canvas.Left="23" Canvas.Top="125" -->
-                                <!--          Fill="{StaticResource blue-400}" /> -->
-                                <!-- <Ellipse Width="16" Height="16" Canvas.Left="20" Canvas.Top="122" -->
-                                <!--          Stroke="{StaticResource blue-400}" -->
-                                <!--          StrokeThickness="1" -->
-                                <!--          Opacity="0.3" /> -->
-                            </Canvas>
+                            <Canvas ZIndex="2" x:Name="GitGraph" />
                             <ItemsControl ItemsSource="{Binding Commits}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -225,8 +195,8 @@
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <ItemsControl ItemsSource="{Binding SelectedCommit.Files}">
                                 <ItemsControl.ItemsPanel>
-									<ItemsPanelTemplate>
-										<VirtualizingStackPanel />
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
@@ -281,7 +251,8 @@
                                 </StackPanel>
                             </Grid>
                         </Border>
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Auto">
                             <ItemsControl ItemsSource="{Binding SelectedFileCommit.Lines}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -301,9 +272,9 @@
                                                        Padding="0,0,10,0"
                                                        Foreground="{StaticResource slate-600}"
                                                        Height="20.4" />
-                                            <SelectableTextBlock Grid.Column="1" 
-                                                                 Text="{Binding Line}" 
-                                                                 Height="20.4"/>
+                                            <SelectableTextBlock Grid.Column="1"
+                                                                 Text="{Binding Line}"
+                                                                 Height="20.4" />
                                         </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -315,8 +286,8 @@
         </Grid>
         <!-- <NativeWebView Grid.Row="0" Grid.RowSpan="2"  -->
         <!--                Source="https://docs.avaloniaui.net/controls/web/nativewebview"/> -->
-        
-        
+
+
     </Grid>
 
 </Window>
