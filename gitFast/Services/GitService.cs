@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using gitFast.Models;
 using FileCommit = gitFast.Models.FileCommit;
@@ -12,14 +13,14 @@ namespace gitFast.Services;
 
 public static class GitService
 {
-    private static string mainPath = @"";
+    public static string MainPath { get; private set; }= @"";
 
     public static void SetMainPath(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
             throw new ArgumentException("Repository path cannot be empty.", nameof(path));
 
-        mainPath = path;
+        MainPath = path;
     }
 
     public static string[] GetFileDiff(string id, string file)
@@ -54,11 +55,29 @@ public static class GitService
         if (output.Length == 0)
             return Task.FromResult<List<FileCommit>>([]);
 
+        var regex = new Regex(@"\\(\d+)\\(\d+)");
         var list = new List<FileCommit>(output.Length);
         foreach (var line in output)
         {
             if (!TryParseFileStatus(line, out var file, out var status))
                 continue;
+
+            if (file.Contains("\""))
+            {
+                file = file.Replace("\"", "");
+
+                while (regex.IsMatch(file))
+                {
+                    var match = regex.Match(file);
+                    var data = octalToDecimal(int.Parse(match.Groups[1].Value)).ToString("x2") +
+                               octalToDecimal(int.Parse(match.Groups[2].Value)).ToString("x2");
+
+                    var hex = Convert.FromHexString(data);
+
+                    var str = Encoding.UTF8.GetString(hex);
+                    file = file.Replace(match.Value, str);
+                }
+            }
 
             list.Add(new FileCommit(file, status));
         }
@@ -69,7 +88,7 @@ public static class GitService
     public static List<CommitInfo> GetCommits()
     {
         //"--all", 
-        var output = RunGit("log", "--topo-order", "--pretty=%H%x09%s%x09%aN%x09%at%x09%P");
+        var output = RunGit("log", "--topo-order", "--pretty=%H%x09%s%x09%aN%x09%at%x09%P%x09%D");
         if (output.Length == 0)
             return [];
 
@@ -83,13 +102,42 @@ public static class GitService
             if (!long.TryParse(columns[3], NumberStyles.Integer, CultureInfo.InvariantCulture, out var unixTime))
                 continue;
 
-            list.Add(new CommitInfo(
+            var commit = new CommitInfo(
                 columns[0],
                 columns[1],
                 columns[2],
                 DateTimeOffset.FromUnixTimeSeconds(unixTime).LocalDateTime,
                 columns[4].Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            ));
+            );
+            list.Add(commit);
+
+            if (!string.IsNullOrEmpty(columns[5]))
+            {
+                var tags = columns[5].Split(",", StringSplitOptions.TrimEntries);
+
+                foreach (var tag in tags)
+                {
+                    if (tag.Contains("->"))
+                    {
+                        commit.Tags.Add(new Tag(TagType.Branch, tag.Replace("HEAD -> ", "")));
+                    }
+                    else if (tag.Contains("/"))
+                    {
+                        if (!tag.Contains("HEAD"))
+                            commit.Tags.Add(new Tag(TagType.RemoteBranch, tag));
+                    }
+                    else if (tag.Contains("tag"))
+                    {
+                        commit.Tags.Add(new Tag(TagType.Tag, tag.Replace("tag: ", "")));
+                    }
+                    else
+                    {
+                        commit.Tags.Add(new Tag(TagType.Branch, tag));
+                    }
+                }
+
+                commit.Tags.Sort((item1, item2) => item1.Type.CompareTo(item2.Type));
+            }
         }
 
         return list;
@@ -104,21 +152,45 @@ public static class GitService
         });
     }
 
-    public static List<BranchInfo> GetBranches()
+    public static List<BranchInfo> GetBranches(bool isLocal = true)
     {
-        var output = RunGit("branch", "--all");
-        
+        var output = isLocal
+            ? RunGit("branch")
+            : RunGit("branch", "-r").Select(item => item.Replace("origin/HEAD ->", ""));
+
         return output.Select(item => new BranchInfo(item.Replace("*", "").Trim(), item.Contains('*'))).ToList();
+    }
+
+    public static List<string> GetTags()
+    {
+        return RunGit("tag").ToList();
     }
 
     public static void SelectBranch(string branch)
     {
-        RunGit("switch",  branch);
+        if (branch.Contains("origin/"))
+        {
+            RunGit("switch", "-c", branch.Replace("origin/", ""), branch);
+        }
+        else
+        {
+            RunGit("switch", branch);
+        }
+    }
+
+    public static string GetHeadBranch(string branch)
+    {
+        return RunGit("rev-parse", branch)[0];
+    }
+
+    public static void RemoveBranch(string branchName)
+    {
+        RunGit("branch", "-D", branchName);
     }
 
     private static string[] RunGit(params string[] arguments)
     {
-        if (string.IsNullOrEmpty(mainPath)) return [];
+        if (string.IsNullOrEmpty(MainPath)) return [];
 
         using var process = StartGitProcess(arguments);
 
@@ -137,7 +209,7 @@ public static class GitService
         var startInfo = new ProcessStartInfo
         {
             FileName = "git",
-            WorkingDirectory = mainPath,
+            WorkingDirectory = MainPath,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -189,5 +261,33 @@ public static class GitService
         };
 
         return true;
+    }
+
+    private static int octalToDecimal(int n)
+    {
+        int num = n;
+        int dec_value = 0;
+
+        // Initializing base value  
+        // to 1, i.e 8^0 
+        int b_ase = 1;
+
+        int temp = num;
+        while (temp > 0)
+        {
+            // Extracting last digit 
+            int last_digit = temp % 10;
+            temp = temp / 10;
+
+            // Multiplying last digit  
+            // with appropriate base  
+            // value and adding it to  
+            // dec_value 
+            dec_value += last_digit * b_ase;
+
+            b_ase = b_ase * 8;
+        }
+
+        return dec_value;
     }
 }

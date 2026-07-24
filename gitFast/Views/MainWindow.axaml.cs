@@ -8,6 +8,7 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Platform.Storage;
 using gitFast.Models;
 using gitFast.Services;
 using gitFast.ViewModels;
@@ -17,9 +18,11 @@ namespace gitFast.Views;
 
 public partial class MainWindow : Window
 {
-    private const double offsetY = 52;
-    private const double offsetX = 24;
-    private readonly List<SolidColorBrush> Brushes;
+    private const double OffsetY = 52;
+    private const double OffsetX = 24;
+    private readonly List<SolidColorBrush> brushes;
+
+    private List<Control> childrens = [];
 
     public MainWindow()
     {
@@ -32,7 +35,7 @@ public partial class MainWindow : Window
         Application.Current!.TryGetResource("violet-400", out var violet);
         Application.Current!.TryGetResource("fuchsia-400", out var fuchsia);
 
-        Brushes =
+        brushes =
         [
             (red as SolidColorBrush)!,
             (blue as SolidColorBrush)!,
@@ -45,6 +48,22 @@ public partial class MainWindow : Window
         ];
 
         InitializeComponent();
+    }
+
+    private async Task InitRepo(MainWindowViewModel model, Func<Task>? func = null)
+    {
+        CommitsScrollViewer.IsVisible = false;
+        LoaderIcon.IsVisible = true;
+
+        if (func != null)
+        {
+            await func();
+        }
+
+        await model.Init();
+        await GenerateGraphAsync(model);
+        LoaderIcon.IsVisible = false;
+        CommitsScrollViewer.IsVisible = true;
     }
 
     private void CommitRow_OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -67,25 +86,20 @@ public partial class MainWindow : Window
     {
         if (DataContext is MainWindowViewModel model)
         {
-            await model.Init();
-            LoaderIcon.IsVisible = false;
-            await GenerateGraphAsync(model);
+            await InitRepo(model);
         }
     }
 
     private async Task GenerateGraphAsync(MainWindowViewModel model)
     {
         await Task.Yield();
-
+        
         var sizePoint = new Point(12, 12);
         var parents = new List<GitGraph>();
-        var linesColors = new Dictionary<int, SolidColorBrush>();
         var arrayCommitOffset = new int[model.Commits.Count];
         var currentOffset = 1;
 
-        GitGraph.IsVisible = false;
-
-        GitGraph.Children.Clear();
+        childrens.Clear();
 
         for (var i = 0; i < model.Commits.Count; i++)
         {
@@ -98,7 +112,7 @@ public partial class MainWindow : Window
                 currentOffset = first + 1;
                 arrayCommitOffset[i] = currentOffset;
 
-                var currentPoint2 = new Point(arrayCommitOffset[i] * offsetX, 21 + i * offsetY);
+                var currentPoint2 = new Point(arrayCommitOffset[i] * OffsetX, 21 + i * OffsetY);
 
                 var paths = parents.Where(item => item.Id == modelCommit.Id).Select(item => item.Path);
 
@@ -110,7 +124,7 @@ public partial class MainWindow : Window
             if (i == 0)
                 arrayCommitOffset[i] = currentOffset;
 
-            var currentPoint = new Point(arrayCommitOffset[i] * offsetX, 21 + i * offsetY);
+            var currentPoint = new Point(arrayCommitOffset[i] * OffsetX, 21 + i * OffsetY);
             AddCommitNode(modelCommit, currentPoint, sizePoint);
 
             if (modelCommit.ParentId.Length > 0)
@@ -137,15 +151,31 @@ public partial class MainWindow : Window
             {
                 if (currentOffset == j + 1) continue;
 
-                var point = new Point((j + 1) * offsetX, 21 + i * offsetY);
+                var point = new Point((j + 1) * OffsetX, 21 + i * OffsetY);
 
                 parents[j].Path.Segments!.Add(new LineSegment
                 {
                     Point = point + sizePoint / 2
                 });
             }
+
+            modelCommit.Offset = parents.Count == 1 ? 1 : parents.Count;
         }
 
+        for (var i = 1; i < model.Commits.Count - 1; i++)
+        {
+            if (Math.Abs(model.Commits[i - 1].Offset / 24 - model.Commits[i + 1].Offset / 24) > 2)
+                model.Commits[i].Offset = (model.Commits[i - 1].Offset / 24 + model.Commits[i + 1].Offset / 24) / 2 + 1;
+        }
+
+        GitGraph.IsHitTestVisible = false;
+        GitGraph.IsVisible = false;
+        GitGraph.Children.Clear();
+        GitGraph.BeginInit();
+
+        GitGraph.Children.AddRange(childrens);
+
+        GitGraph.EndInit();
         GitGraph.IsVisible = true;
     }
 
@@ -168,7 +198,7 @@ public partial class MainWindow : Window
             path.Segments!.Add(new QuadraticBezierSegment
             {
                 Point1 = new Point(line2.Point.X, currentPoint2.Y + sizePoint.Y / 2),
-                Point2 = new Point(line2.Point.X, currentPoint2.Y + sizePoint.Y / 2) + new Point(-offsetX, 0)
+                Point2 = new Point(line2.Point.X, currentPoint2.Y + sizePoint.Y / 2) + new Point(-OffsetX, 0)
             });
 
             path.Segments.Add(new LineSegment
@@ -205,24 +235,24 @@ public partial class MainWindow : Window
             }
 
 
-        var brush = Brushes[(int)(path.StartPoint.X / offsetX) % Brushes.Count];
+        var brush = brushes[(int)(path.StartPoint.X / OffsetX) % brushes.Count];
 
         var geometry = new PathGeometry();
         geometry.Figures!.Add(path);
 
-        GitGraph.Children.Add(new Path
+        childrens.Add(new Path
         {
             Stroke = brush,
             StrokeThickness = 2,
             Data = geometry,
-            Opacity = 0.7
+            Opacity = 0.7,
         });
     }
 
     private void AddCommitNode(CommitInfo commit, Point point, Point pointSize)
     {
         //(int)(point.X / pointSize.X)
-        var brush = Brushes[(int)(point.X / offsetX) % Brushes.Count];
+        var brush = brushes[(int)(point.X / OffsetX) % brushes.Count];
 
         if (commit.Message.Contains("Merge"))
         {
@@ -233,11 +263,11 @@ public partial class MainWindow : Window
                 Stroke = brush,
                 StrokeThickness = 1,
                 Opacity = 0.6,
-                ZIndex = 2
+                ZIndex = 2,
             };
             Canvas.SetLeft(mergeNode, point.X - 3);
             Canvas.SetTop(mergeNode, point.Y - 3);
-            GitGraph.Children.Add(mergeNode);
+            childrens.Add(mergeNode);
         }
 
         var node = new Ellipse
@@ -245,11 +275,11 @@ public partial class MainWindow : Window
             Width = pointSize.X,
             Height = pointSize.Y,
             Fill = brush,
-            ZIndex = 2
+            ZIndex = 2,
         };
         Canvas.SetLeft(node, point.X);
         Canvas.SetTop(node, point.Y);
-        GitGraph.Children.Add(node);
+        childrens.Add(node);
     }
 
     private async void SearchBox_OnTextChanged(object? sender, TextChangedEventArgs e)
@@ -257,33 +287,73 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel model && sender is TextBox box) await model.SearchCommits(box.Text!);
     }
 
-    private async void Button_OnClick(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainWindowViewModel model) await GenerateGraphAsync(model);
-    }
-
     private async void FetchButton_OnClick(object? sender, RoutedEventArgs e)
     {
-        await GitService.GitFetch();
-
         if (DataContext is MainWindowViewModel model)
         {
-            LoaderIcon.IsVisible = true;
-            await model.Init();
-            LoaderIcon.IsVisible = false;
-            await GenerateGraphAsync(model);
+            model.IsFetching = true;
+            await InitRepo(model, async () => { await GitService.GitFetch(); });
+            model.IsFetching = false;
         }
     }
 
     private async void Branch_Pressed(object? sender, PointerPressedEventArgs e)
     {
-        if (sender is Border { DataContext: BranchInfo branch } && DataContext is MainWindowViewModel model)
+        var properties = e.GetCurrentPoint(sender as Control);
+
+        if (properties.Properties.IsLeftButtonPressed
+            && properties.Position != new Point(0, 0)
+            && sender is Border { DataContext: BranchInfo branch }
+            && DataContext is MainWindowViewModel model)
         {
-            LoaderIcon.IsVisible = true;
-            model.SelectBranch(branch.Name);
-            await model.Init();
-            LoaderIcon.IsVisible = false;
-            await GenerateGraphAsync(model);
+            await InitRepo(model, async () => { model.SelectBranch(branch.Name); });
+        }
+    }
+
+    private void TagsSideItem_Pressed(object? sender, PointerPressedEventArgs e)
+    {
+        var properties = e.GetCurrentPoint(sender as Control).Properties;
+        if (properties.IsLeftButtonPressed
+            && sender is Border { DataContext: BranchInfo branch }
+            && DataContext is MainWindowViewModel model)
+        {
+            model.SelectCommitByTag(branch);
+        }
+    }
+
+    private void RemoveBranch_Pressed(object? sender, PointerPressedEventArgs e)
+    {
+        var properties = e.GetCurrentPoint(sender as Control);
+
+        if (properties.Properties.IsLeftButtonPressed
+            && sender is Border { DataContext: BranchInfo branch }
+            && DataContext is MainWindowViewModel model)
+        {
+            model.RemoveBranch(branch);
+        }
+    }
+
+    private async void ChangeRepo_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        // Get TopLevel context from the current control or Window
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        // Open the folder picker dialog
+        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = "Select a Project Folder",
+            AllowMultiple = false
+        });
+
+        // Process the selection
+        if (folders.Count > 0)
+        {
+            // Get the absolute path if available (primarily desktop platforms)
+            var folderPath = folders[0].Path.LocalPath;
+            GitService.SetMainPath(folderPath[..^1]);
+            if (DataContext is MainWindowViewModel model)
+                await InitRepo(model);
         }
     }
 }

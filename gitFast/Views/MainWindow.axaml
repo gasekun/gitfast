@@ -4,7 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:system="clr-namespace:System;assembly=System.Runtime"
+        xmlns:ext="clr-namespace:gitFast.Ext"
         mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
+        x:Name="mainWindow"
         x:Class="gitFast.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="gitFast" Classes="Main" Background="{StaticResource bg}"
@@ -25,13 +27,13 @@
                 <Separator Height="20" Width="1"
                            Background="{StaticResource border}" />
 
-                <Border Classes="PanelRound">
+                <Border Classes="PanelRound" PointerPressed="ChangeRepo_OnPointerPressed">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <PathIcon Data="{StaticResource FolderOutline}"
                                   Foreground="{StaticResource text-muted}"
                                   Width="13"
                                   Height="13" />
-                        <TextBlock FontWeight="Medium">gitFast-cli</TextBlock>
+                        <TextBlock FontWeight="Medium" Text="{Binding NameRepo}" />
                     </StackPanel>
                 </Border>
 
@@ -53,13 +55,10 @@
                         <TextBox Grid.Column="2" Classes="SearchTextBox" TextChanged="SearchBox_OnTextChanged" />
                     </Grid>
                 </Border>
-                <Button Classes="Btn">
-                    <PathIcon Data="{StaticResource Reload}" />
-                </Button>
-                <Button Click="Button_OnClick" Classes="Btn">Rerender</Button>
+
                 <Button Click="FetchButton_OnClick" Classes="Btn">
                     <StackPanel>
-                        <PathIcon Data="{StaticResource Reload}" />
+                        <PathIcon Data="{StaticResource Autorenew}" Classes.Animated="{Binding IsFetching}" />
                         <TextBlock>Fetch</TextBlock>
                     </StackPanel>
                 </Button>
@@ -70,28 +69,74 @@
                     BorderThickness="0,0,1,0"
                     Background="{StaticResource panel}"
                     Padding="10,14">
-                <StackPanel Classes="SideSection">
-                    <TextBlock Text="BRANCHES" Classes="SideLabel" />
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Height="320">
-                        <ItemsControl ItemsSource="{Binding Branches}">
+                <Grid Margin="0,0,0,16" RowDefinitions="Auto, *, Auto, *, Auto, *">
+                    <TextBlock Grid.Row="0" Text="BRANCHES" Classes="SideLabel" />
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="200"
+                                  VerticalAlignment="Top">
+                        <ItemsControl ItemsSource="{Binding LocalBranches}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Classes="SideItem"
                                             Classes.Selected="{Binding IsCurrentBranch}"
                                             PointerPressed="Branch_Pressed">
+                                        <Grid ColumnDefinitions="*, Auto" VerticalAlignment="Center">
+                                            <StackPanel VerticalAlignment="Center">
+                                                <Border Width="7" Height="7"
+                                                        Background="{StaticResource blue-400}"
+                                                        CornerRadius="50" />
+                                                <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                            </StackPanel>
+                                            <Border Grid.Column="1"
+                                                    Padding="4"
+                                                    PointerPressed="RemoveBranch_Pressed">
+                                                <PathIcon Width="8" Height="8"
+                                                          Data="{StaticResource Close}"
+                                                          Foreground="{StaticResource red-500}" />
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <TextBlock Grid.Row="2" Text="TAGS" Classes="SideLabel" />
+                    <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" MaxHeight="200"
+                                  VerticalAlignment="Top">
+                        <ItemsControl ItemsSource="{Binding Tags}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Classes="SideItem"
+                                            PointerPressed="TagsSideItem_Pressed">
                                         <StackPanel>
-                                            <Border Width="7" Height="7"
-                                                    Background="{StaticResource blue-400}"
-                                                    CornerRadius="50" />
-                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name}"/>
+                                            <PathIcon Width="13" Height="13" Data="{StaticResource TagOutline}"
+                                                      Foreground="{StaticResource amber-400}" />
+                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
-           
-                </StackPanel>
+                    <TextBlock Grid.Row="4" Text="REMOTE" Classes="SideLabel" />
+                    <ScrollViewer Grid.Row="5" VerticalScrollBarVisibility="Auto" MaxHeight="200"
+                                  VerticalAlignment="Top">
+                        <ItemsControl ItemsSource="{Binding RemoteBranches}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Classes="SideItem"
+                                            Classes.Selected="{Binding IsCurrentBranch}"
+                                            PointerPressed="Branch_Pressed">
+                                        <StackPanel>
+                                            <PathIcon Width="13" Height="13" Data="{StaticResource Web}"
+                                                       Foreground="{StaticResource violet-400}" />
+                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
             </Border>
             <Border Grid.Row="0" Grid.Column="1"
                     BorderBrush="{StaticResource border}"
@@ -105,7 +150,7 @@
                                     Spacing="8"
                                     TextElement.Foreground="{StaticResource text-muted}"
                                     TextElement.FontSize="12">
-                            <TextBlock>main</TextBlock>
+                            <TextBlock Text="{Binding CurrentBranch}" />
                             <TextBlock Foreground="{StaticResource text-faint}">
                                 ·
                                 <Run Text="{Binding Commits.Count}" /> commits
@@ -134,36 +179,58 @@
                             </Style>
                         </PathIcon.Styles>
                     </PathIcon>
-                    <ScrollViewer Grid.Row="1">
+                    <ScrollViewer Grid.Row="1" x:Name="CommitsScrollViewer">
                         <Grid>
-                            <Canvas ZIndex="2" x:Name="GitGraph" />
-                            <ItemsControl ItemsSource="{Binding Commits}">
-                                <ItemsControl.ItemsPanel>
+                            <Canvas x:Name="GitGraph"
+                                    ZIndex="1"
+                                    IsVisible="{Binding DisplayGraph}" />
+                            <ListBox ItemsSource="{Binding Commits}"
+                                     Classes="CleanList"
+                                     x:Name="CommitsItemsControl"
+                                     ext:ListBoxExtensions.ScrollToItem="{Binding SelectedCommit}">
+                                <ListBox.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <VirtualizingStackPanel />
+                                        <VirtualizingStackPanel Background="Transparent" />
                                     </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <Border Classes="CommitRow"
                                                 Classes.Selected="{Binding IsSelected}"
                                                 PointerPressed="CommitRow_OnPointerPressed">
-                                            <Grid ColumnDefinitions="56, *, Auto">
-                                                <Border />
-                                                <StackPanel Grid.Column="1"
-                                                            VerticalAlignment="Center">
+                                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                                <Border Width="{Binding Offset}"
+                                                        IsVisible="{Binding ElementName=mainWindow, Path=DataContext.DisplayGraph}" />
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                     <TextBlock Classes="CommitMsg" Text="{Binding Message}" />
                                                     <StackPanel Classes="CommitMeta">
-                                                        <TextBlock Text="{Binding Id}" Classes="Mono" />
+                                                        <TextBlock Text="{Binding IdShort}" Classes="Mono" />
                                                         <TextBlock Text="{Binding Author}" />
+                                                        <ItemsControl ItemsSource="{Binding Tags}">
+                                                            <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                    <StackPanel Orientation="Horizontal" Spacing="4" />
+                                                                </ItemsPanelTemplate>
+                                                            </ItemsControl.ItemsPanel>
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Border Classes="RefBadge"
+                                                                            Classes.Branch="{Binding IsBranch}"
+                                                                            Classes.RemoteBranch="{Binding IsRemoteBranch}"
+                                                                            Classes.Tag="{Binding IsTag}">
+                                                                        <TextBlock Text="{Binding Name}" />
+                                                                    </Border>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
                                                     </StackPanel>
                                                 </StackPanel>
                                                 <TextBlock Grid.Column="2" Classes="CommitDate" Text="{Binding Date}" />
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
                         </Grid>
                     </ScrollViewer>
                 </Grid>
@@ -175,7 +242,7 @@
                     <Grid>
                         <StackPanel>
                             <Border Classes="Hash">
-                                <TextBlock Text="{Binding SelectedCommit.Id, TargetNullValue='Not selected'}"
+                                <TextBlock Text="{Binding SelectedCommit.IdShort, TargetNullValue='Not selected'}"
                                            Classes="Mono" />
                             </Border>
                             <TextBlock Text="{Binding SelectedCommit.Message}"

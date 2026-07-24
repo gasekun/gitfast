@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using gitFast.Models;
@@ -13,7 +14,19 @@ public class MainWindowViewModel : ViewModelBase
 {
     private List<CommitInfo> commits = [];
 
-    public ObservableCollection<BranchInfo> Branches
+    public ObservableCollection<BranchInfo> LocalBranches
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    } = [];
+
+    public ObservableCollection<BranchInfo> RemoteBranches
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    } = [];
+
+    public ObservableCollection<BranchInfo> Tags
     {
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
@@ -37,12 +50,49 @@ public class MainWindowViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref field, value);
     }
 
+    public bool IsFetching
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    }
+
+    public string CurrentBranch
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    } = "";
+
+    public bool DisplayGraph
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    } = true;
+
+    public string NameRepo
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    } = "";
+
     public async Task Init()
     {
         await Task.Run(() =>
         {
-            Branches = new ObservableCollection<BranchInfo>(GitService.GetBranches());
+            Commits.Clear();
+            SelectedCommit = null;
+            SelectedFileCommit = null;
+
+            NameRepo = Path.GetFileName(GitService.MainPath);
+
+            LocalBranches = new ObservableCollection<BranchInfo>(GitService.GetBranches());
+            RemoteBranches = new ObservableCollection<BranchInfo>(GitService.GetBranches(false));
             commits = GitService.GetCommits();
+            if (LocalBranches.Count > 0)
+                CurrentBranch = LocalBranches.FirstOrDefault(item => item.IsCurrentBranch).Name ?? "";
+
+            Tags = new ObservableCollection<BranchInfo>(commits.SelectMany(item => item.Tags).Where(item => item.IsTag)
+                .Select(item => new BranchInfo(item.Name, false)));
+
             Commits = new ObservableCollection<CommitInfo>(commits);
 
             if (Commits.Count > 0)
@@ -91,6 +141,8 @@ public class MainWindowViewModel : ViewModelBase
 
             Commits = new ObservableCollection<CommitInfo>(commits
                 .Where(item => item.Message.ToLower().Contains(searchText)).ToList());
+
+            DisplayGraph = Commits.Count == commits.Count;
             return Task.CompletedTask;
         }
         catch (Exception exception)
@@ -102,5 +154,22 @@ public class MainWindowViewModel : ViewModelBase
     public void SelectBranch(string branch)
     {
         GitService.SelectBranch(branch);
+    }
+
+    public void SelectCommitByTag(BranchInfo branch)
+    {
+        var commit = commits.FirstOrDefault(item => item.Tags.Any(tags => tags.Name.Contains(branch.Name)));
+        if (commit != null)
+        {
+            SelectCommit(commit);
+        }
+    }
+
+    public void RemoveBranch(BranchInfo branch)
+    {
+        GitService.RemoveBranch(branch.Name);
+        LocalBranches = new ObservableCollection<BranchInfo>(GitService.GetBranches());
+        if (LocalBranches.Count > 0)
+            SelectBranch(LocalBranches[0].Name);
     }
 }
