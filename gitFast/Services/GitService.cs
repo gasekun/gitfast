@@ -13,7 +13,7 @@ namespace gitFast.Services;
 
 public static class GitService
 {
-    public static string MainPath { get; private set; }= @"";
+    public static string MainPath { get; private set; } = @"";
 
     public static void SetMainPath(string path)
     {
@@ -23,9 +23,9 @@ public static class GitService
         MainPath = path;
     }
 
-    public static string[] GetFileDiff(string id, string file)
+    public static async Task<string[]> GetFileDiff(string id, string file)
     {
-        var output = RunGit("show", id, "--format=", "--", file);
+        var output = await RunGit("show", id, "--format=", "--", file);
         if (output.Length == 0)
             return [];
 
@@ -33,9 +33,9 @@ public static class GitService
         return startIndex >= output.Length ? [] : output[startIndex..];
     }
 
-    public static (int add, int remove) GetFileEditCount(string id, string file)
+    public static async Task<(int add, int remove)> GetFileEditCount(string id, string file)
     {
-        var output = RunGit("show", id, "--numstat", "--format=", "--", file);
+        var output = await RunGit("show", id, "--numstat", "--format=", "--", file);
         if (output.Length == 0)
             return (0, 0);
 
@@ -49,11 +49,12 @@ public static class GitService
             : (0, 0);
     }
 
-    public static Task<List<FileCommit>> GetFilesCommit(string id)
+    public static async Task<List<FileCommit>> GetFilesCommit(string id)
     {
-        var output = RunGit("show", id, "--format=", "--name-status");
+        var output = await RunGit("show", id, "--format=", "--name-status");
+        
         if (output.Length == 0)
-            return Task.FromResult<List<FileCommit>>([]);
+            return [];
 
         var regex = new Regex(@"\\(\d+)\\(\d+)");
         var list = new List<FileCommit>(output.Length);
@@ -69,8 +70,8 @@ public static class GitService
                 while (regex.IsMatch(file))
                 {
                     var match = regex.Match(file);
-                    var data = octalToDecimal(int.Parse(match.Groups[1].Value)).ToString("x2") +
-                               octalToDecimal(int.Parse(match.Groups[2].Value)).ToString("x2");
+                    var data = OctalToDecimal(int.Parse(match.Groups[1].Value)).ToString("x2") +
+                               OctalToDecimal(int.Parse(match.Groups[2].Value)).ToString("x2");
 
                     var hex = Convert.FromHexString(data);
 
@@ -82,13 +83,14 @@ public static class GitService
             list.Add(new FileCommit(file, status));
         }
 
-        return Task.FromResult(list);
+        return list;
     }
 
-    public static List<CommitInfo> GetCommits()
+    public static async Task<List<CommitInfo>> GetCommits()
     {
         //"--all", 
-        var output = RunGit("log", "--topo-order", "--pretty=%H%x09%s%x09%aN%x09%at%x09%P%x09%D");
+        var output = await RunGit("log", "--topo-order", "--pretty=%H%x09%s%x09%aN%x09%at%x09%P%x09%D");
+        
         if (output.Length == 0)
             return [];
 
@@ -145,58 +147,58 @@ public static class GitService
 
     public static async Task GitFetch()
     {
-        await Task.Run(() =>
-        {
-            RunGit("fetch", "--all");
-            RunGit("pull", "--all");
-        });
+        await RunGit("fetch", "--all");
+        await RunGit("pull", "--all");
     }
 
-    public static List<BranchInfo> GetBranches(bool isLocal = true)
+    public static async Task<List<BranchInfo>> GetBranches(bool isLocal = true)
     {
-        var output = isLocal
-            ? RunGit("branch")
-            : RunGit("branch", "-r").Select(item => item.Replace("origin/HEAD ->", ""));
+        var output = (isLocal
+                ? await RunGit("branch")
+                : await RunGit("branch", "-r"))
+            .Select(item => item.Replace("origin/HEAD ->", ""))
+            .Select(item => new BranchInfo(item.Replace("*", "").Trim(), item.Contains('*')));
 
-        return output.Select(item => new BranchInfo(item.Replace("*", "").Trim(), item.Contains('*'))).ToList();
+        return output.ToList();
     }
 
-    public static List<string> GetTags()
+    public static async Task<List<string>> GetTags()
     {
-        return RunGit("tag").ToList();
+        return (await RunGit("tag")).ToList();
     }
 
-    public static void SelectBranch(string branch)
+    public static async Task SelectBranch(string branch)
     {
         if (branch.Contains("origin/"))
         {
-            RunGit("switch", "-c", branch.Replace("origin/", ""), branch);
+            await RunGit("switch", "-c", branch.Replace("origin/", ""), branch);
         }
         else
         {
-            RunGit("switch", branch);
+            await RunGit("switch", branch);
         }
     }
 
-    public static string GetHeadBranch(string branch)
+    public static async Task<string> GetHeadBranch(string branch)
     {
-        return RunGit("rev-parse", branch)[0];
+        return (await RunGit("rev-parse", branch))[0];
     }
 
-    public static void RemoveBranch(string branchName)
+    public static async Task RemoveBranch(string branchName)
     {
-        RunGit("branch", "-D", branchName);
+        await RunGit("branch", "-D", branchName);
     }
 
-    private static string[] RunGit(params string[] arguments)
+    private static async Task<string[]> RunGit(params string[] arguments)
     {
         if (string.IsNullOrEmpty(MainPath)) return [];
 
         using var process = StartGitProcess(arguments);
 
-        var output = process.StandardOutput.ReadToEnd();
-        _ = process.StandardError.ReadToEnd();
-        process.WaitForExit();
+        var output = await process.StandardOutput.ReadToEndAsync();
+        _ = await process.StandardError.ReadToEndAsync();
+
+        await process.WaitForExitAsync();
 
         if (process.ExitCode != 0)
             return [];
@@ -263,7 +265,7 @@ public static class GitService
         return true;
     }
 
-    private static int octalToDecimal(int n)
+    private static int OctalToDecimal(int n)
     {
         int num = n;
         int dec_value = 0;

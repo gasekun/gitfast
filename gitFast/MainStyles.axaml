@@ -59,6 +59,12 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="TextElement.Foreground" Value="{StaticResource text-muted}" />
     </Style>
+    
+    <Style Selector="Border.SideItem TextBlock.Name">
+        <Setter Property="Height" Value="13" />
+        <Setter Property="Width" Value="200" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
 
     <Style Selector="Border.SideItem StackPanel">
         <Setter Property="Spacing" Value="8" />
@@ -160,7 +166,7 @@
 
     <Style Selector="Border.BottomHead TextBlock.Msg">
         <Setter Property="FontWeight" Value="Medium" />
-        <Setter Property="TextTrimming" Value="WordEllipsis" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
 
     <Style Selector="Border.BottomHead TextBlock.Author">
@@ -222,6 +228,12 @@
         <Style Selector="^:pointerover">
             <Setter Property="Background" Value="{StaticResource panel-raised}" />
         </Style>
+    </Style>
+    
+    <Style Selector="Border.FileRow TextBlock.FileName">
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="TextTrimming" Value="LeadingCharacterEllipsis" />
     </Style>
 
     <Style Selector="Border.FileRow.Selected">

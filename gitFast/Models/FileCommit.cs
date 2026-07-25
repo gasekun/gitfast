@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using gitFast.Services;
 using ReactiveUI;
 
@@ -44,17 +45,17 @@ public partial record FileCommit(string Path, StatusFile Status)
         set => this.RaiseAndSetIfChanged(ref field, value);
     }
 
-    public void LoadCount(string commitId)
+    public async Task LoadCount(string commitId)
     {
-        var countFile = GitService.GetFileEditCount(commitId, Path);
+        var countFile = await GitService.GetFileEditCount(commitId, Path);
 
         CountAdd = countFile.add;
         CountRemove = countFile.remove;
     }
 
-    public void LoadLines(string commitId)
+    public async Task LoadLines(string commitId)
     {
-        var diff = GitService.GetFileDiff(commitId, Path);
+        var diff = await GitService.GetFileDiff(commitId, Path);
 
         Lines = ParseLines(diff);
     }

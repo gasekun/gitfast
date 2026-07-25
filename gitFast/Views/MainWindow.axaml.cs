@@ -55,6 +55,8 @@ public partial class MainWindow : Window
         CommitsScrollViewer.IsVisible = false;
         LoaderIcon.IsVisible = true;
 
+        model.ClearCommits();
+        
         if (func != null)
         {
             await func();
@@ -66,20 +68,20 @@ public partial class MainWindow : Window
         CommitsScrollViewer.IsVisible = true;
     }
 
-    private void CommitRow_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    private async void CommitRow_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
 
         if (DataContext is MainWindowViewModel model && sender is Border { DataContext: CommitInfo commitInfo })
-            model.SelectCommit(commitInfo);
+            await model.SelectCommit(commitInfo);
     }
 
-    private void FileRow_OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    private async void FileRow_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
 
         if (DataContext is MainWindowViewModel model && sender is Border { DataContext: FileCommit fileCommit })
-            model.SelectFileCommit(fileCommit);
+            await model.SelectFileCommit(fileCommit);
     }
 
     private async void Control_OnLoaded(object? sender, RoutedEventArgs e)
@@ -93,7 +95,9 @@ public partial class MainWindow : Window
     private async Task GenerateGraphAsync(MainWindowViewModel model)
     {
         await Task.Yield();
-        
+
+        return;
+
         var sizePoint = new Point(12, 12);
         var parents = new List<GitGraph>();
         var arrayCommitOffset = new int[model.Commits.Count];
@@ -306,22 +310,23 @@ public partial class MainWindow : Window
             && sender is Border { DataContext: BranchInfo branch }
             && DataContext is MainWindowViewModel model)
         {
-            await InitRepo(model, async () => { model.SelectBranch(branch.Name); });
+     
+            await InitRepo(model, async () => { await model.SelectBranch(branch.Name); });
         }
     }
 
-    private void TagsSideItem_Pressed(object? sender, PointerPressedEventArgs e)
+    private async void TagsSideItem_Pressed(object? sender, PointerPressedEventArgs e)
     {
         var properties = e.GetCurrentPoint(sender as Control).Properties;
         if (properties.IsLeftButtonPressed
             && sender is Border { DataContext: BranchInfo branch }
             && DataContext is MainWindowViewModel model)
         {
-            model.SelectCommitByTag(branch);
+            await model.SelectCommitByTag(branch);
         }
     }
 
-    private void RemoveBranch_Pressed(object? sender, PointerPressedEventArgs e)
+    private async void RemoveBranch_Pressed(object? sender, PointerPressedEventArgs e)
     {
         var properties = e.GetCurrentPoint(sender as Control);
 
@@ -329,27 +334,25 @@ public partial class MainWindow : Window
             && sender is Border { DataContext: BranchInfo branch }
             && DataContext is MainWindowViewModel model)
         {
-            model.RemoveBranch(branch);
+            e.Handled = true;
+            
+            await model.RemoveBranch(branch);
         }
     }
 
     private async void ChangeRepo_OnPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        // Get TopLevel context from the current control or Window
-        var topLevel = TopLevel.GetTopLevel(this);
+        var topLevel = GetTopLevel(this);
         if (topLevel == null) return;
 
-        // Open the folder picker dialog
         var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
             Title = "Select a Project Folder",
             AllowMultiple = false
         });
-
-        // Process the selection
+        
         if (folders.Count > 0)
         {
-            // Get the absolute path if available (primarily desktop platforms)
             var folderPath = folders[0].Path.LocalPath;
             GitService.SetMainPath(folderPath[..^1]);
             if (DataContext is MainWindowViewModel model)

@@ -74,33 +74,31 @@ public class MainWindowViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref field, value);
     } = "";
 
+    public void ClearCommits() => Commits.Clear();
+
     public async Task Init()
     {
-        await Task.Run(() =>
-        {
-            Commits.Clear();
-            SelectedCommit = null;
-            SelectedFileCommit = null;
+        SelectedCommit = null;
+        SelectedFileCommit = null;
 
-            NameRepo = Path.GetFileName(GitService.MainPath);
+        NameRepo = Path.GetFileName(GitService.MainPath);
 
-            LocalBranches = new ObservableCollection<BranchInfo>(GitService.GetBranches());
-            RemoteBranches = new ObservableCollection<BranchInfo>(GitService.GetBranches(false));
-            commits = GitService.GetCommits();
-            if (LocalBranches.Count > 0)
-                CurrentBranch = LocalBranches.FirstOrDefault(item => item.IsCurrentBranch).Name ?? "";
+        LocalBranches = new ObservableCollection<BranchInfo>(await GitService.GetBranches());
+        RemoteBranches = new ObservableCollection<BranchInfo>(await GitService.GetBranches(false));
+        commits = await GitService.GetCommits();
+        if (LocalBranches.Count > 0)
+            CurrentBranch = LocalBranches.FirstOrDefault(item => item.IsCurrentBranch).Name ?? "";
 
-            Tags = new ObservableCollection<BranchInfo>(commits.SelectMany(item => item.Tags).Where(item => item.IsTag)
-                .Select(item => new BranchInfo(item.Name, false)));
+        Tags = new ObservableCollection<BranchInfo>(commits.SelectMany(item => item.Tags).Where(item => item.IsTag)
+            .Select(item => new BranchInfo(item.Name, false)));
 
-            Commits = new ObservableCollection<CommitInfo>(commits);
+        Commits = new ObservableCollection<CommitInfo>(commits);
 
-            if (Commits.Count > 0)
-                SelectCommit(Commits[0]);
-        });
+        if (Commits.Count > 0)
+            await SelectCommit(Commits[0]);
     }
 
-    public async void SelectCommit(CommitInfo commit)
+    public async Task SelectCommit(CommitInfo commit)
     {
         foreach (var commitInfo in Commits) commitInfo.IsSelected = false;
 
@@ -122,7 +120,7 @@ public class MainWindowViewModel : ViewModelBase
             });
     }
 
-    public void SelectFileCommit(FileCommit fileCommit)
+    public async Task SelectFileCommit(FileCommit fileCommit)
     {
         foreach (var file in SelectedCommit!.Files) file.IsSelected = false;
 
@@ -130,7 +128,7 @@ public class MainWindowViewModel : ViewModelBase
 
         SelectedFileCommit = fileCommit;
 
-        fileCommit.LoadLines(SelectedCommit.Id);
+        await fileCommit.LoadLines(SelectedCommit.Id);
     }
 
     public Task SearchCommits(string boxText)
@@ -151,25 +149,26 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    public void SelectBranch(string branch)
+    public async Task SelectBranch(string branch)
     {
-        GitService.SelectBranch(branch);
+        CurrentBranch = branch;
+        await GitService.SelectBranch(branch);
     }
 
-    public void SelectCommitByTag(BranchInfo branch)
+    public async Task SelectCommitByTag(BranchInfo branch)
     {
         var commit = commits.FirstOrDefault(item => item.Tags.Any(tags => tags.Name.Contains(branch.Name)));
         if (commit != null)
         {
-            SelectCommit(commit);
+            await SelectCommit(commit);
         }
     }
 
-    public void RemoveBranch(BranchInfo branch)
+    public async Task RemoveBranch(BranchInfo branch)
     {
-        GitService.RemoveBranch(branch.Name);
-        LocalBranches = new ObservableCollection<BranchInfo>(GitService.GetBranches());
+        await GitService.RemoveBranch(branch.Name);
+        LocalBranches = new ObservableCollection<BranchInfo>(await GitService.GetBranches());
         if (LocalBranches.Count > 0)
-            SelectBranch(LocalBranches[0].Name);
+            await SelectBranch(LocalBranches[0].Name);
     }
 }

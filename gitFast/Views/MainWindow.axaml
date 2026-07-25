@@ -3,7 +3,6 @@
         xmlns:vm="using:gitFast.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:system="clr-namespace:System;assembly=System.Runtime"
         xmlns:ext="clr-namespace:gitFast.Ext"
         mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="720"
         x:Name="mainWindow"
@@ -78,13 +77,14 @@
                                 <DataTemplate>
                                     <Border Classes="SideItem"
                                             Classes.Selected="{Binding IsCurrentBranch}"
-                                            PointerPressed="Branch_Pressed">
+                                            PointerPressed="Branch_Pressed"
+                                            ToolTip.Tip="{Binding Name}">
                                         <Grid ColumnDefinitions="*, Auto" VerticalAlignment="Center">
                                             <StackPanel VerticalAlignment="Center">
                                                 <Border Width="7" Height="7"
                                                         Background="{StaticResource blue-400}"
                                                         CornerRadius="50" />
-                                                <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                                <TextBlock VerticalAlignment="Center" Text="{Binding Name}" Classes="Name" />
                                             </StackPanel>
                                             <Border Grid.Column="1"
                                                     Padding="4"
@@ -106,11 +106,12 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Classes="SideItem"
-                                            PointerPressed="TagsSideItem_Pressed">
+                                            PointerPressed="TagsSideItem_Pressed" 
+                                            ToolTip.Tip="{Binding Name}">
                                         <StackPanel>
                                             <PathIcon Width="13" Height="13" Data="{StaticResource TagOutline}"
                                                       Foreground="{StaticResource amber-400}" />
-                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name}" Classes="Name" />
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>
@@ -125,11 +126,11 @@
                                 <DataTemplate>
                                     <Border Classes="SideItem"
                                             Classes.Selected="{Binding IsCurrentBranch}"
-                                            PointerPressed="Branch_Pressed">
+                                            PointerPressed="Branch_Pressed" ToolTip.Tip="{Binding Name}">
                                         <StackPanel>
                                             <PathIcon Width="13" Height="13" Data="{StaticResource Web}"
                                                        Foreground="{StaticResource violet-400}" />
-                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                                            <TextBlock VerticalAlignment="Center" Text="{Binding Name}" Classes="Name" />
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>
@@ -280,11 +281,8 @@
                                                     <TextBlock Text="{Binding TextStatus}" Classes="Status Mono" />
                                                 </Border>
                                                 <TextBlock Grid.Column="2" Text="{Binding Path}"
-                                                           Classes="Mono"
-                                                           Classes.SelectedFileRow="{Binding IsSelected}"
-                                                           TextElement.FontSize="12.5"
-                                                           TextWrapping="NoWrap"
-                                                           TextTrimming="WordEllipsis" />
+                                                           Classes="Mono FileName"
+                                                           Classes.SelectedFileRow="{Binding IsSelected}"/>
                                                 <StackPanel Grid.Column="4"
                                                             Orientation="Horizontal"
                                                             Spacing="5"
