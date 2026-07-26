@@ -384,4 +384,137 @@
         <Setter Property="Background" Value="Transparent"/>
     </Style>
 
+    <Style Selector="Border.StatusBar">
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Padding" Value="14,0" />
+        <Setter Property="Background" Value="{StaticResource panel}" />
+        <Setter Property="BorderBrush" Value="{StaticResource border}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+    </Style>
+
+    <Style Selector="Border.StatusBar TextBlock.StatusText">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{StaticResource text-muted}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <Style Selector="Border.StatusBar TextBlock.StatusKey">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{StaticResource text-faint}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="PathIcon.StatusSpinner">
+        <Setter Property="Width" Value="12" />
+        <Setter Property="Height" Value="12" />
+        <Setter Property="Foreground" Value="{StaticResource blue-400}" />
+        <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+        <Style.Animations>
+            <Animation Duration="0:0:1" PlaybackBehavior="Always" IterationCount="INFINITE">
+                <KeyFrame Cue="0%">
+                    <Setter Property="RotateTransform.Angle" Value="0" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="RotateTransform.Angle" Value="360" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- ====== Commit sidebar ====== -->
+    <Style Selector="Border.CommitSidebar">
+        <Setter Property="Width" Value="340" />
+        <Setter Property="ZIndex" Value="10" />
+        <Setter Property="RenderTransform" Value="translateX(0)" />
+        <Setter Property="Background" Value="{StaticResource panel}" />
+        <Setter Property="BorderBrush" Value="{StaticResource border}" />
+        <Setter Property="BorderThickness" Value="1,0,0,0" />
+    </Style>
+
+    <Style Selector="Border.CommitSidebarHead">
+        <Setter Property="Padding" Value="14,10" />
+        <Setter Property="BorderBrush" Value="{StaticResource border}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+
+    <Style Selector="Border.CommitSidebarItem">
+        <Setter Property="Padding" Value="8,6" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Width" Value="323" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.CommitSidebarItem:pointerover">
+        <Setter Property="Background" Value="{StaticResource panel-raised}" />
+    </Style>
+
+    <!-- <Style Selector="Border.CommitSidebarItem.Checked"> -->
+    <!--     <Setter Property="BorderBrush" Value="{StaticResource blue-400}" /> -->
+    <!--     <Setter Property="BorderThickness" Value="0,0,2,0" /> -->
+    <!--     <Setter Property="CornerRadius" Value="6,0,0,6" /> -->
+    <!-- </Style> -->
+
+    <Style Selector="Border.CommitSidebarItem TextBlock.FileName">
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="TextTrimming" Value="LeadingCharacterEllipsis" />
+        <Setter Property="Foreground" Value="{StaticResource text-muted}" />
+    </Style>
+
+    <Style Selector="Border.CommitSidebarItem.Checked TextBlock.FileName">
+        <Setter Property="Foreground" Value="{StaticResource text}" />
+    </Style>
+
+    <Style Selector="CheckBox.FileCheck">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,0,8,0" />
+    </Style>
+
+    <Style Selector="TextBox.CommitMessage">
+        <Setter Property="Background" Value="{StaticResource panel-raised}" />
+        <Setter Property="BorderBrush" Value="{StaticResource border-strong}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="10,8" />
+        <Setter Property="Foreground" Value="{StaticResource text}" />
+        <Setter Property="CaretBrush" Value="{StaticResource text}" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="MinHeight" Value="80" />
+        <Setter Property="AcceptsReturn" Value="True" />
+    </Style>
+
+    <Style Selector="Button.CommitBtn">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="12,7" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Background" Value="{StaticResource blue-500}" />
+        <Setter Property="Foreground" Value="{StaticResource text}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Style Selector="^:pointerover">
+            <Setter Property="Background" Value="{StaticResource blue-400}" />
+        </Style>
+        <Style Selector="^:disabled">
+            <Setter Property="Background" Value="{StaticResource slate-700}" />
+            <Setter Property="Foreground" Value="{StaticResource text-faint}" />
+        </Style>
+    </Style>
+    
+    <Style Selector="Border.CommitSidebar">
+        <Setter Property="RenderTransformOrigin" Value="100%,0%" />
+    </Style>
+
+    <Style Selector="Border.CommitSidebar.SlideIn">
+        <Setter Property="RenderTransform" Value="translateX(0)"/>
+    </Style>
+
+    <Style Selector="Border.CommitSidebar.SlideOut">
+        <Setter Property="RenderTransform" Value="translateX(360px)"/>
+    </Style>
+
 </Styles>

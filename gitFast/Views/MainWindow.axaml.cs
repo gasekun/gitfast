@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Themes.Simple;
 using gitFast.Models;
 using gitFast.Services;
 using gitFast.ViewModels;
@@ -50,22 +51,27 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
-    private async Task InitRepo(MainWindowViewModel model, Func<Task>? func = null)
+    private async Task InitRepo(Func<Task>? func = null)
     {
+        var model = (DataContext as MainWindowViewModel)!;
         CommitsScrollViewer.IsVisible = false;
-        LoaderIcon.IsVisible = true;
+        model.DisplayGraph = false;
+        childrens.Clear();
+        GitGraph.Children.Clear();
+        GC.Collect();
 
         model.ClearCommits();
-        
+
         if (func != null)
         {
             await func();
         }
 
+        model.SetStatus("Loading repository…");
         await model.Init();
-        await GenerateGraphAsync(model);
-        LoaderIcon.IsVisible = false;
+        
         CommitsScrollViewer.IsVisible = true;
+        model.SetStatus($"Loaded {model.Commits.Count} commits from {model.NameRepo}", busy: false);
     }
 
     private async void CommitRow_OnPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -86,17 +92,12 @@ public partial class MainWindow : Window
 
     private async void Control_OnLoaded(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is MainWindowViewModel model)
-        {
-            await InitRepo(model);
-        }
+        await InitRepo();
     }
 
     private async Task GenerateGraphAsync(MainWindowViewModel model)
     {
         await Task.Yield();
-
-        return;
 
         var sizePoint = new Point(12, 12);
         var parents = new List<GitGraph>();
@@ -291,12 +292,24 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel model && sender is TextBox box) await model.SearchCommits(box.Text!);
     }
 
+    private async void BuildGraphButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel model)
+        {
+            model.SetStatus("Building commit graph…");
+            await GenerateGraphAsync(model);
+            model.DisplayGraph = true;
+            model.SetStatus($"Graph built for {model.Commits.Count} commits", busy: false);
+        }
+    }
+
     private async void FetchButton_OnClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is MainWindowViewModel model)
         {
             model.IsFetching = true;
-            await InitRepo(model, async () => { await GitService.GitFetch(); });
+            model.SetStatus("Fetching from remotes…");
+            await InitRepo(async () => { await GitService.GitFetch(); });
             model.IsFetching = false;
         }
     }
@@ -310,8 +323,8 @@ public partial class MainWindow : Window
             && sender is Border { DataContext: BranchInfo branch }
             && DataContext is MainWindowViewModel model)
         {
-     
-            await InitRepo(model, async () => { await model.SelectBranch(branch.Name); });
+            model.SetStatus($"Switching to {branch.Name}…");
+            await InitRepo(async () => { await model.SelectBranch(branch.Name); });
         }
     }
 
@@ -335,7 +348,7 @@ public partial class MainWindow : Window
             && DataContext is MainWindowViewModel model)
         {
             e.Handled = true;
-            
+
             await model.RemoveBranch(branch);
         }
     }
@@ -350,13 +363,146 @@ public partial class MainWindow : Window
             Title = "Select a Project Folder",
             AllowMultiple = false
         });
-        
+
         if (folders.Count > 0)
         {
             var folderPath = folders[0].Path.LocalPath;
             GitService.SetMainPath(folderPath[..^1]);
-            if (DataContext is MainWindowViewModel model)
-                await InitRepo(model);
+            await InitRepo();
+        }
+    }
+
+    private async void CommitButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel model) return;
+        
+        if (model.WorkingFiles.Count == 0)
+        {
+            await model.LoadWorkingFiles();
+        }
+        
+        model.ToggleSidebar();
+        
+        await Task.Delay(50);
+        UpdateLayout();
+    }
+
+    private void CloseSidebar_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel model)
+            model.IsCommitSidebarOpen = false;
+    }
+
+    private async void RefreshWorkingFiles_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel model)
+            await model.RefreshWorkingFiles();
+    }
+
+    private async void FileCheck_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel model) return;
+        if (sender is not CheckBox { DataContext: WorkingFile file }) return;
+
+        await model.OnFileStagedForCommitChanged(file);
+        
+        //await model.RefreshWorkingFiles();
+    }
+
+    private async void DoCommit_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel model) return;
+        
+        var ready = await model.EnsureSomethingStagedForCommitAsync(() => 
+            ShowConfirmAsync("No files are selected for this commit.\n\nAdd all files to the commit?"));
+
+        if (!ready) return;
+
+        await model.CommitSelected();
+
+        await model.Init();
+    }
+
+    /// <summary>
+    /// Small modal Yes/No confirm. Returns true if the user picks the primary action.
+    /// </summary>
+    private async Task<bool> ShowConfirmAsync(string message, string title = "gitFast")
+    {
+        Application.Current!.TryGetResource("panel", out var panel);
+        Application.Current!.TryGetResource("text", out var text);
+
+        var dialog = new Window
+        {
+            Title = title,
+            Width = 380,
+            SizeToContent = SizeToContent.Height,
+            CanResize = false,
+            Theme = Theme,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Background = (Brush)panel!,
+            Foreground = (Brush)text!,
+        };
+
+        var result = false;
+        var yesButton = new Button
+        {
+            Content = "Yes",
+            Classes = { "CommitBtn" },
+            Padding = new Thickness(14, 7),
+            Margin = new Thickness(0, 0, 8, 0),
+        };
+        yesButton.Click += (_, _) =>
+        {
+            result = true;
+            dialog.Close();
+        };
+
+        var noButton = new Button
+        {
+            Content = "Cancel",
+            Classes = { "Btn" },
+        };
+        noButton.Click += (_, _) =>
+        {
+            result = false;
+            dialog.Close();
+        };
+
+        dialog.Content = new Border
+        {
+            Padding = new Thickness(20),
+            Child = new StackPanel
+            {
+                Spacing = 16,
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = message,
+                        TextWrapping = TextWrapping.Wrap,
+                        Foreground = (Brush)text!,
+                    },
+                    new StackPanel
+                    {
+                        Orientation = Avalonia.Layout.Orientation.Horizontal,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                        Spacing = 8,
+                        Children = { yesButton, noButton }
+                    }
+                }
+            }
+        };
+
+        await dialog.ShowDialog(this);
+        return result;
+    }
+
+    private async void ResetRepo_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (await ShowConfirmAsync("I you sure to hard reset repo?", "Reset repo"))
+        {
+            await GitService.ResetRepo();
+            await InitRepo();
         }
     }
 }

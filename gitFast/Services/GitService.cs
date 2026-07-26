@@ -7,7 +7,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using gitFast.Models;
-using FileCommit = gitFast.Models.FileCommit;
 
 namespace gitFast.Services;
 
@@ -52,7 +51,7 @@ public static class GitService
     public static async Task<List<FileCommit>> GetFilesCommit(string id)
     {
         var output = await RunGit("show", id, "--format=", "--name-status");
-        
+
         if (output.Length == 0)
             return [];
 
@@ -63,22 +62,7 @@ public static class GitService
             if (!TryParseFileStatus(line, out var file, out var status))
                 continue;
 
-            if (file.Contains("\""))
-            {
-                file = file.Replace("\"", "");
-
-                while (regex.IsMatch(file))
-                {
-                    var match = regex.Match(file);
-                    var data = OctalToDecimal(int.Parse(match.Groups[1].Value)).ToString("x2") +
-                               OctalToDecimal(int.Parse(match.Groups[2].Value)).ToString("x2");
-
-                    var hex = Convert.FromHexString(data);
-
-                    var str = Encoding.UTF8.GetString(hex);
-                    file = file.Replace(match.Value, str);
-                }
-            }
+            file = DecodePath(file);
 
             list.Add(new FileCommit(file, status));
         }
@@ -86,11 +70,84 @@ public static class GitService
         return list;
     }
 
+    public static async Task<List<WorkingFile>> GetStatus()
+    {
+        var output = await RunGit("status", "--porcelain", "-s", "--untracked-files=all");
+        if (output.Length == 0) return [];
+
+        return (from s in output
+            let code = s[..2]
+            let file = DecodePath(s[3..].Trim())
+            let isStage = !code.StartsWith(' ') && !code.StartsWith('?')
+            select new WorkingFile(file, code.Trim(), isStage, code.StartsWith('?'))).ToList();
+    }
+
+    public static async Task StageFiles(IEnumerable<string> paths)
+    {
+        var args = new List<string> { "add", "--" };
+        args.AddRange(paths);
+        await RunGit(args.ToArray());
+    }
+
+    public static async Task UnstageFiles(IEnumerable<string> paths)
+    {
+        List<string> args = ["reset", "HEAD", "--"];
+        args.AddRange(paths);
+        await RunGit(args.ToArray());
+    }
+
+    public static async Task StageAll()
+    {
+        await RunGit("add", "-A");
+    }
+
+    public static async Task Commit(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            throw new ArgumentException("Commit message cannot be empty.", nameof(message));
+
+        await RunGit("commit", "-m", message);
+    }
+
+    private static string DecodePath(string path)
+    {
+        if (!path.Contains('"')) return path;
+
+        var unquoted = path.Replace("\"", "");
+        var regex = new Regex(@"\\(\d+)\\(\d+)");
+        while (regex.IsMatch(unquoted))
+        {
+            var match = regex.Match(unquoted);
+            var data = OctalToDecimal(int.Parse(match.Groups[1].Value)).ToString("x2") +
+                       OctalToDecimal(int.Parse(match.Groups[2].Value)).ToString("x2");
+            var hex = Convert.FromHexString(data);
+            var str = Encoding.UTF8.GetString(hex);
+            unquoted = unquoted.Replace(match.Value, str);
+        }
+
+        return unquoted;
+    }
+
+    private static async Task<string[]> RunGitRaw(params string[] arguments)
+    {
+        if (string.IsNullOrEmpty(MainPath)) return [];
+
+        using var process = StartGitProcess(arguments);
+        var output = await process.StandardOutput.ReadToEndAsync();
+        _ = await process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync();
+
+        if (process.ExitCode != 0) return [];
+
+        // Split on NUL, then drop trailing empty (some git versions append \0).
+        return output.Split('\0', StringSplitOptions.RemoveEmptyEntries);
+    }
+
     public static async Task<List<CommitInfo>> GetCommits()
     {
         //"--all", 
         var output = await RunGit("log", "--topo-order", "--pretty=%H%x09%s%x09%aN%x09%at%x09%P%x09%D");
-        
+
         if (output.Length == 0)
             return [];
 
@@ -291,5 +348,10 @@ public static class GitService
         }
 
         return dec_value;
+    }
+
+    public static async Task ResetRepo()
+    {
+        await RunGit("reset", "--hard");
     }
 }

@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:gitFast.ViewModels"
+        xmlns:m="using:gitFast.Models"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ext="clr-namespace:gitFast.Ext"
@@ -15,55 +16,77 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <Grid RowDefinitions="44, *">
+    <Window.Resources>
+        <x:Double x:Key="SidebarWidth">340</x:Double>
+    </Window.Resources>
+
+    <Grid RowDefinitions="44, *, 24">
         <Border Classes="Title">
-            <StackPanel Orientation="Horizontal" Spacing="7">
-                <PathIcon Data="{StaticResource Git}"
-                          Foreground="{StaticResource blue-500}"
-                          Width="16"
-                          Height="16" />
-                <TextBlock Classes="Brand">gitFast</TextBlock>
-                <Separator Height="20" Width="1"
-                           Background="{StaticResource border}" />
+            <Grid ColumnDefinitions="*, Auto, Auto, Auto" ColumnSpacing="4">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="7">
+                    <PathIcon Data="{StaticResource Git}"
+                              Foreground="{StaticResource blue-500}"
+                              Width="16"
+                              Height="16" />
+                    <TextBlock Classes="Brand">gitFast</TextBlock>
+                    <Separator Height="20" Width="1"
+                               Margin="0"
+                               Background="{StaticResource border}" />
 
-                <Border Classes="PanelRound" PointerPressed="ChangeRepo_OnPointerPressed">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <PathIcon Data="{StaticResource FolderOutline}"
-                                  Foreground="{StaticResource text-muted}"
-                                  Width="13"
-                                  Height="13" />
-                        <TextBlock FontWeight="Medium" Text="{Binding NameRepo}" />
-                    </StackPanel>
-                </Border>
+                    <Border Classes="PanelRound" PointerPressed="ChangeRepo_OnPointerPressed">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <PathIcon Data="{StaticResource FolderOutline}"
+                                      Foreground="{StaticResource text-muted}"
+                                      Width="13"
+                                      Height="13" />
+                            <TextBlock FontWeight="Medium" Text="{Binding NameRepo}" />
+                        </StackPanel>
+                    </Border>
 
-                <Border Classes="PanelRound" IsVisible="False">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <Border Width="7" Height="7"
-                                Background="{StaticResource blue-400}"
-                                CornerRadius="50" />
-                        <TextBlock FontSize="12.5" Text="main" />
-                        <TextBlock Foreground="{StaticResource text-faint}" Text="▾" />
-                    </StackPanel>
-                </Border>
+                    <Border Classes="PanelRound" IsVisible="False">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Border Width="7" Height="7"
+                                    Background="{StaticResource blue-400}"
+                                    CornerRadius="50" />
+                            <TextBlock FontSize="12.5" Text="main" />
+                            <TextBlock Foreground="{StaticResource text-faint}" Text="▾" />
+                        </StackPanel>
+                    </Border>
 
-                <Border Classes="PanelRound" Width="340" Cursor="Arrow">
-                    <Grid ColumnDefinitions="Auto,7,*">
-                        <PathIcon Data="{StaticResource Magnify}"
-                                  Foreground="{StaticResource text-faint}"
-                                  Width="13" Height="13" />
-                        <TextBox Grid.Column="2" Classes="SearchTextBox" TextChanged="SearchBox_OnTextChanged" />
-                    </Grid>
-                </Border>
-
-                <Button Click="FetchButton_OnClick" Classes="Btn">
+                    <Border Classes="PanelRound" Width="340" Cursor="Arrow">
+                        <Grid ColumnDefinitions="Auto,7,*">
+                            <PathIcon Data="{StaticResource Magnify}"
+                                      Foreground="{StaticResource text-faint}"
+                                      Width="13" Height="13" />
+                            <TextBox Grid.Column="2" Classes="SearchTextBox" TextChanged="SearchBox_OnTextChanged" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+                <Button Grid.Column="1" Click="FetchButton_OnClick" Classes="Btn">
                     <StackPanel>
                         <PathIcon Data="{StaticResource Autorenew}" Classes.Animated="{Binding IsFetching}" />
                         <TextBlock>Fetch</TextBlock>
                     </StackPanel>
                 </Button>
-            </StackPanel>
+                <Button Grid.Column="2" Click="BuildGraphButton_OnClick"
+                        Classes="Btn"
+                        ToolTip.Tip="Build commit graph (uses more memory)">
+                    <StackPanel>
+                        <PathIcon Data="{StaticResource Git}" />
+                        <TextBlock>Graph</TextBlock>
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="3"
+                        Click="CommitButton_OnClick"
+                        Classes="CommitBtn"
+                        ToolTip.Tip="Open the commit sidebar">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock>+ Commit</TextBlock>
+                    </StackPanel>
+                </Button>
+            </Grid>
         </Border>
-        <Grid Grid.Row="1" ColumnDefinitions="268, *" RowDefinitions="1.3*, *">
+        <Grid Grid.Row="1" ColumnDefinitions="268, *, Auto" RowDefinitions="1.3*, *">
             <Border Grid.RowSpan="2" BorderBrush="{StaticResource border}"
                     BorderThickness="0,0,1,0"
                     Background="{StaticResource panel}"
@@ -158,28 +181,7 @@
                             </TextBlock>
                         </StackPanel>
                     </Border>
-                    <PathIcon Grid.Row="1" x:Name="LoaderIcon"
-                              Data="{StaticResource Autorenew}"
-                              Width="32"
-                              Height="32"
-                              VerticalAlignment="Center"
-                              HorizontalAlignment="Center"
-                              Foreground="{StaticResource text}">
-                        <PathIcon.Styles>
-                            <Style Selector="PathIcon">
-                                <Style.Animations>
-                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
-                                        <KeyFrame Cue="0%">
-                                            <Setter Property="RotateTransform.Angle" Value="0" />
-                                        </KeyFrame>
-                                        <KeyFrame Cue="100%">
-                                            <Setter Property="RotateTransform.Angle" Value="360" />
-                                        </KeyFrame>
-                                    </Animation>
-                                </Style.Animations>
-                            </Style>
-                        </PathIcon.Styles>
-                    </PathIcon>
+           
                     <ScrollViewer Grid.Row="1" x:Name="CommitsScrollViewer">
                         <Grid>
                             <Canvas x:Name="GitGraph"
@@ -349,9 +351,171 @@
                 </Grid>
             </Grid>
         </Grid>
-        <!-- <NativeWebView Grid.Row="0" Grid.RowSpan="2"  -->
-        <!--                Source="https://docs.avaloniaui.net/controls/web/nativewebview"/> -->
 
+        <Border Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                x:Name="CommitSidebarPanel"
+                Classes="CommitSidebar"
+                Classes.SlideIn="{Binding IsCommitSidebarOpen}"
+                Classes.SlideOut="{Binding !IsCommitSidebarOpen}">
+            <Border.Transitions>
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Easing="CubicEaseOut" />
+                </Transitions>
+            </Border.Transitions>
+            <Grid RowDefinitions="Auto, *, Auto">
+                <Border Grid.Row="0" Classes="CommitSidebarHead">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Classes="SideLabel" Padding="0">CHANGES</TextBlock>
+                            <TextBlock Foreground="{StaticResource text-faint}" FontSize="11.5">
+                                <Run Text="{Binding WorkingFiles.Count}" /> working file(s)
+                            </TextBlock>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                            <Button Click="ResetRepo_OnClick" Classes="Btn" ToolTip.Tip="Hard reset"
+                                    Background="{StaticResource red-950}"
+                                    BorderBrush="{StaticResource red-900}"
+                                    Padding="0"
+                                    Width="24" Height="24">
+                                <PathIcon Data="{StaticResource History}" Width="14" Height="14" 
+                                          Foreground="{StaticResource red-400}"/>
+                            </Button>
+                            <Button Click="RefreshWorkingFiles_OnClick" Classes="Btn" ToolTip.Tip="Refresh working tree"
+                                    Padding="0"
+                                    Width="24" Height="24">
+                                <PathIcon Data="{StaticResource Autorenew}" Width="14" Height="14"/>
+                            </Button>
+                            <Button Click="CloseSidebar_OnClick" Classes="Btn" ToolTip.Tip="Close sidebar"
+                                    Padding="0"
+                                    Width="24" Height="24">
+                                <PathIcon Data="{StaticResource Close}" Width="10" Height="10"  />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="8,8,8,0">
+                        <TextBlock Classes="SideLabel" IsVisible="{Binding !IsWorkingTreeEmpty}">STAGED</TextBlock>
+                        <ItemsControl ItemsSource="{Binding StagedFiles}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="m:WorkingFile">
+                                    <Border Classes="CommitSidebarItem" Margin="0,1"
+                                            Classes.Checked="{Binding IsStagedForCommit}">
+                                        <Grid ColumnDefinitions="Auto, *, Auto"
+                                              VerticalAlignment="Center"
+                                              TextElement.Foreground="{StaticResource text-muted}">
+                                            <CheckBox Grid.Column="0"
+                                                      Classes="FileCheck"
+                                                      IsChecked="{Binding IsStagedForCommit, Mode=TwoWay}"
+                                                      Click="FileCheck_OnClick" />
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <Border Classes="StatusChip A"
+                                                        Classes.A="{Binding IsCreated}"
+                                                        Classes.M="{Binding IsModified}"
+                                                        Classes.R="{Binding IsRemoved}">
+                                                    <TextBlock Text="{Binding TextStatus}" Classes="Status Mono" />
+                                                </Border>
+                                                <TextBlock Text="{Binding Path}" Classes="Mono FileName" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        
+                        <TextBlock Classes="SideLabel" IsVisible="{Binding !IsWorkingTreeEmpty}">UNSTAGED</TextBlock>
+                             <ItemsControl ItemsSource="{Binding UnstagedFiles}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="m:WorkingFile">
+                                    <Border Classes="CommitSidebarItem" Margin="0,1"
+                                            Classes.Checked="{Binding IsStagedForCommit}">
+                                        <Grid ColumnDefinitions="Auto, *, Auto"
+                                              VerticalAlignment="Center"
+                                              TextElement.Foreground="{StaticResource text-muted}">
+                                            <CheckBox Grid.Column="0"
+                                                      Classes="FileCheck"
+                                                      IsChecked="{Binding IsStagedForCommit, Mode=TwoWay}"
+                                                      Click="FileCheck_OnClick" />
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <Border Classes="StatusChip A"
+                                                        Classes.A="{Binding IsCreated}"
+                                                        Classes.M="{Binding IsModified}"
+                                                        Classes.R="{Binding IsRemoved}">
+                                                    <TextBlock Text="{Binding TextStatus}" Classes="Status Mono" />
+                                                </Border>
+                                                <TextBlock Text="{Binding Path}" Classes="Mono FileName" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        
+                        <TextBlock Text="Working tree clean"
+                                   Foreground="{StaticResource text-faint}"
+                                   FontSize="12.5"
+                                   HorizontalAlignment="Center"
+                                   Padding="0,20"
+                                   IsVisible="{Binding IsWorkingTreeEmpty}" />
+                    </StackPanel>
+                </ScrollViewer>
+                
+                <Border Grid.Row="2" Padding="12" BorderBrush="{StaticResource border}" BorderThickness="0,1,0,0">
+                    <StackPanel Spacing="8">
+                        <TextBox Classes="CommitMessage"
+                                 PlaceholderText="Commit message"
+                                 x:Name="CommitMessageBox"
+                                 Text="{Binding CommitMessage, Mode=TwoWay}" />
+                        <Grid ColumnDefinitions="*, Auto">
+                            <TextBlock Grid.Column="0"
+                                       VerticalAlignment="Center"
+                                       Foreground="{StaticResource text-faint}"
+                                       FontSize="11.5">
+                                <Run Text="{Binding StagedCount}" /> file(s) staged
+                            </TextBlock>
+                            <Button Grid.Column="1"
+                                    Classes="CommitBtn"
+                                    Click="DoCommit_OnClick"
+                                    IsEnabled="{Binding StagedCount}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <PathIcon Data="{StaticResource Git}" Width="13" Height="13" />
+                                    <TextBlock>Commit</TextBlock>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2" Classes="StatusBar" x:Name="StatusBar">
+            <Grid ColumnDefinitions="Auto, 6, *, Auto, 14, Auto">
+                <PathIcon Grid.Column="0"
+                          Data="{StaticResource Autorenew}"
+                          Classes.StatusSpinner="{Binding IsBusy}"
+                          IsVisible="{Binding IsBusy}" />
+                <TextBlock Grid.Column="2"
+                           Classes="StatusText"
+                           Text="{Binding StatusMessage}" />
+                <TextBlock Grid.Column="3"
+                           Classes="StatusKey"
+                           Text="{Binding CurrentBranch}" />
+                <TextBlock Grid.Column="5"
+                           Classes="StatusKey"
+                           Text="{Binding NameRepo}" />
+            </Grid>
+        </Border>
 
     </Grid>
 
