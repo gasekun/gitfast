@@ -82,8 +82,7 @@
                            Maximum="{TemplateBinding Maximum}"
                            Value="{TemplateBinding Value, Mode=TwoWay}"
                            ViewportSize="{TemplateBinding ViewportSize}"
-                           Orientation="{TemplateBinding Orientation}"
-                           IsDirectionReversed="True">
+                           Orientation="{TemplateBinding Orientation}">
 
                         <!-- Custom Styled Thumb -->
                         <Track.Thumb>
@@ -103,6 +102,14 @@
                 </Grid>
             </ControlTemplate>
         </Setter>
+
+        <!-- Vertical scrollbars run from bottom to top; horizontal ones run left to right. -->
+        <Style Selector="^:vertical /template/ Track#PART_Track">
+            <Setter Property="IsDirectionReversed" Value="True" />
+        </Style>
+        <Style Selector="^:horizontal /template/ Track#PART_Track">
+            <Setter Property="IsDirectionReversed" Value="False" />
+        </Style>
 
         <!-- Visual state when hovering over the overall scroll area -->
         <Style Selector="^:pointerover /template/ Border">
