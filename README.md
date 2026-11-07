@@ -86,4 +86,4 @@ gitFast/
 
 ## Development Status
 
-gitFast is a pet project under development. The repository currently has no automated test suite; validation relies on building the solution and manually exercising repository navigation, diffs, and working-tree operations. See [AGENTS.md](AGENTS.md) for contributor guidelines.
+gitFast is a pet project under development. The repository currently has no automated test suite; validation relies on building the solution and manually exercising repository navigation, diffs, and working-tree operations.
